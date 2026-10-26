@@ -21,14 +21,17 @@ The October 26 update is not publication or final approval of page copy.
 
 Before publication:
 
-1. Confirm the publisher's name in the privacy policy.
-2. Set a retention/deletion practice for beta emails, attached rides, and extracted
-   copies. The policy intentionally leaves this marked rather than inventing a term.
-3. Review the page copy and current screenshots. The app's branding/copy approval
-   record is in RideLogger's `docs/design/palomares-branding/CONTEXT.md`.
-4. Enable GitHub Pages, verify palomares.app, configure web DNS while preserving
-   Zoho's email records, and check HTTPS. Remove draft markings after review.
-5. Add the actual TestFlight join link only when the public beta is available.
+The policy names **K. Gabriel Coelho-Kostolny** as publisher. Beta emails, submitted
+rides, attachments and extracted copies are kept through the beta. The copies we
+control are deleted within 90 days after it ends. Earlier deletion requests can
+be sent to beta@palomares.app. Include that cleanup in the beta closeout process.
+
+1. Review the remaining page copy and current screenshots. The app's branding/copy
+   approval record is in RideLogger's `docs/design/palomares-branding/CONTEXT.md`.
+2. Enable GitHub Pages, verify palomares.app, configure web DNS while preserving
+   Zoho's email records, and check HTTPS. Remove draft markings after review and
+   set the privacy policy's effective date when publishing.
+3. Add the actual TestFlight join link only when the public beta is available.
 
 The first friends pilot uses email and TestFlight feedback. A hosted feedback form
 can be added later, with its provider and data handling described in the policy.
@@ -74,6 +77,6 @@ Open `http://127.0.0.1:8765/`, `/beta/`, and `/privacy/`.
 The October 26 check covered all local links, anchors and image files; no empty
 `href="#"` links or scripts remain. All three pages were checked at 390 and 1280
 pixels wide without page overflow; light/dark views and the invitation link were
-also checked in the browser. Publisher and retention are the two remaining policy
-markers. Public hosting, HTTPS and the actual TestFlight invitation flow remain
-to be verified after deployment.
+also checked in the browser. Publisher and retention fields have now been filled;
+no highlighted policy placeholders remain. Public hosting, HTTPS and the actual
+TestFlight invitation flow remain to be verified after deployment.
