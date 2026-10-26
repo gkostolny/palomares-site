@@ -1,0 +1,296 @@
+/* palomares.app, one stylesheet for every page. Built from the app's brand and styling guide
+   (RideLogger repo: docs/design/palomares-branding/BRAND-GUIDE.md):
+   - neutral surfaces and text; teal only for links, small marks and filled controls (section 3)
+   - SF Pro through the system font, rounded numerals for figures (section 4)
+   - 16-20 px insets, ~20 px card corners, 48 px capsule buttons (section 4)
+   - the night road as the one brand moment, always dark, as the splash is (section 7)
+   - the map and the ride carry the story: real screens from the bundled sample ride */
+:root {
+  --bg: #FFFFFF;
+  --grouped: #F2F2F7;
+  --card: #F2F2F7;
+  --row: #FFFFFF;
+  --inset: #FFFFFF;        /* a list inside a card */
+  --text: #000000;
+  --muted: #6C6C70;
+  --quiet: #8E8E93;
+  --divider: #D8D8DC;
+  --link: #126474;
+  --fill: #126474;
+  --on-fill: #FFFFFF;
+  --keep: #248A3D;          /* the app's green "keep doing" */
+  --look: #FF9500;          /* the app's amber "worth a look" (a marker, not text) */
+  --draft: #FFF4CC;
+  --draft-text: #5C4600;
+  --night-top: #1A4A4F;     /* the night road's sky, for the hero's edges while the art loads */
+  --night-bottom: #0B292D;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #000000; --grouped: #000000; --card: #1C1C1E; --row: #1C1C1E; --inset: #2C2C2E; --text: #FFFFFF;
+    --muted: #AEAEB2; --divider: #38383A; --link: #26A6AD; --fill: #087F88;
+    --keep: #30D158; --look: #FF9F0A; --draft: #3A3000; --draft-text: #FFE58A;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #000000; --grouped: #000000; --card: #1C1C1E; --row: #1C1C1E; --inset: #2C2C2E; --text: #FFFFFF;
+  --muted: #AEAEB2; --divider: #38383A; --link: #26A6AD; --fill: #087F88;
+  --keep: #30D158; --look: #FF9F0A; --draft: #3A3000; --draft-text: #FFE58A;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 17px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+img { max-width: 100%; height: auto; display: block; }
+a { color: var(--link); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+.narrow { max-width: 680px; }
+
+/* The wordmark is artwork, not type: the app's vector inline (fill = text color), one color,
+   never stretched. */
+.wordmark { display: block; height: auto; aspect-ratio: 631 / 102; fill: currentColor; }
+
+/* Header: the wordmark modest, as on Ready; links neutral until hovered. */
+.site-header { position: relative; z-index: 2; }
+.site-header .wrap {
+  display: flex; align-items: center; justify-content: space-between;
+  height: 64px;
+}
+.site-header .home { color: var(--text); display: flex; }
+.site-header .home .wordmark { width: 118px; }
+.site-header nav { display: flex; gap: 6px; }
+.site-header nav a {
+  color: var(--text); text-decoration: none; font-size: 15px; font-weight: 500;
+  padding: 7px 14px; border-radius: 999px;
+}
+.site-header nav a:hover { background: var(--card); }
+.site-header nav a[aria-current="page"] { background: var(--card); color: var(--link); }
+.on-night .site-header .home, .on-night .site-header nav a { color: #FFFFFF; }
+.on-night .site-header nav a:hover,
+.on-night .site-header nav a[aria-current="page"] { background: rgba(255,255,255,.14); color: #FFFFFF; }
+
+/* The night road: the splash and app icon's scene, always dark. */
+.night {
+  position: relative;
+  color: #FFFFFF;
+  background: var(--night-bottom);
+  overflow: hidden;
+}
+.night::before {
+  content: ""; position: absolute; inset: 0;
+  background: url(assets/hero-wide.svg) right 62% / cover no-repeat;
+}
+.night::after {               /* keeps the copy readable over the road's glow */
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(8,28,31,.82) 0%, rgba(8,28,31,.55) 45%, rgba(8,28,31,0) 75%);
+}
+.night > * { position: relative; z-index: 1; }
+.on-night .site-header { position: absolute; left: 0; right: 0; top: 0; }
+.hero { padding: 132px 0 96px; min-height: 620px; display: flex; align-items: center; }
+.hero h1 { font-size: 52px; line-height: 1.05; letter-spacing: -0.02em; margin: 0 0 18px; max-width: 12ch; }
+.hero .lede { color: rgba(255,255,255,.82); font-size: 21px; line-height: 1.45; max-width: 30em; margin: 0 0 28px; }
+.hero .meta { color: rgba(255,255,255,.6); font-size: 15px; margin-top: 18px; }
+/* Below about 1000 px the wide scene can't keep the road clear of the text: the tall scene,
+   road below the copy, as on a phone. */
+@media (max-width: 1000px) {
+  .hero-night::before { top: auto; height: 300px; background-image: url(assets/hero-wide.svg); background-position: 62% 78%; }
+  .hero-night::after { background: linear-gradient(180deg, rgba(11,41,45,1) 0%, rgba(11,41,45,.9) calc(100% - 300px), rgba(11,41,45,0) calc(100% - 180px)); }
+  .hero { padding: 120px 0 300px; min-height: 0; align-items: flex-start; }
+}
+@media (max-width: 720px) {
+  .hero-night::before { height: 240px; background-position: 66% 80%; }
+  .hero-night::after { background: linear-gradient(180deg, rgba(11,41,45,1) 0%, rgba(11,41,45,.9) calc(100% - 240px), rgba(11,41,45,0) calc(100% - 140px)); }
+  .hero { padding: 104px 0 240px; }
+  .hero h1 { font-size: 38px; }
+  .hero .lede { font-size: 18px; }
+}
+
+/* Buttons: the app's capsules. Filled teal for the one action; neutral with teal text otherwise. */
+.button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 48px; padding: 0 26px; border-radius: 999px;
+  background: var(--fill); color: var(--on-fill);
+  font-weight: 600; font-size: 17px; text-decoration: none;
+}
+.night .button { background: #087F88; }
+.button.neutral { background: var(--card); color: var(--link); }
+.button:hover { filter: brightness(1.08); }
+
+/* Sections */
+section { padding: 72px 0; }
+section.grouped { background: var(--grouped); }
+section.tight { padding-top: 0; }
+.eyebrow {
+  font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--muted); margin: 0 0 10px;
+}
+h1 { font-size: 40px; line-height: 1.1; letter-spacing: -0.015em; margin: 0 0 10px; }
+h2 { font-size: 30px; line-height: 1.15; letter-spacing: -0.01em; margin: 0 0 14px; }
+h3 { font-size: 19px; line-height: 1.3; margin: 0 0 6px; }
+p, ul, ol { margin: 0 0 14px; }
+.lede { font-size: 20px; color: var(--muted); max-width: 34em; }
+.muted { color: var(--muted); }
+.small { font-size: 15px; }
+
+/* Screens: real app screenshots, framed like the phone. */
+.screens {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px;
+  margin-top: 36px; align-items: start;
+}
+.screen figure, figure.screen { margin: 0; }
+.phone {
+  border-radius: 40px; overflow: hidden; background: #000;
+  border: 1px solid var(--divider);
+  box-shadow: 0 24px 48px -24px rgba(0,0,0,.35);
+  aspect-ratio: 1206 / 2622;
+}
+.phone img { width: 100%; height: 100%; object-fit: cover; }
+.screen figcaption { margin-top: 16px; }
+.screen figcaption strong { display: block; font-size: 17px; margin-bottom: 2px; }
+.screen figcaption span { color: var(--muted); font-size: 15px; }
+@media (max-width: 720px) {
+  .screens {
+    grid-auto-flow: column; grid-template-columns: none; grid-auto-columns: 68%;
+    overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 8px;
+    margin-right: -20px; padding-right: 20px;
+  }
+  .screen { scroll-snap-align: start; }
+  .phone { border-radius: 30px; }
+}
+
+/* Cards and grouped lists, as in the report and Garage. */
+.cards { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.card {
+  background: var(--card); border-radius: 20px; padding: 22px 24px;
+}
+section.grouped .card { background: var(--row); }
+.card > :last-child { margin-bottom: 0; }
+.card ul { padding-left: 20px; }
+@media (max-width: 720px) { .cards { grid-template-columns: 1fr; } }
+
+.steps { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+.steps li {
+  counter-increment: step; position: relative; padding-left: 52px; margin-bottom: 22px;
+}
+.steps li::before {
+  content: counter(step);
+  position: absolute; left: 0; top: -2px;
+  width: 34px; height: 34px; border-radius: 50%;
+  display: grid; place-items: center;
+  font: 600 17px/1 ui-rounded, -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--link); background: var(--bg);
+  border: 1.5px solid var(--link);
+}
+section.grouped .steps li::before { background: var(--row); }
+.steps strong { font-weight: 600; }
+
+.list { background: var(--row); border-radius: 20px; overflow: hidden; margin: 0 0 14px; }
+.list { background: var(--card); }
+section.grouped .list { background: var(--row); }
+.list .row { display: flex; gap: 14px; padding: 14px 20px; align-items: flex-start; }
+.list .row + .row { border-top: 1px solid var(--divider); margin-left: 54px; padding-left: 0; }
+.list .row + .row .dot { margin-left: -34px; }
+.list .row .dot {
+  flex: none; width: 20px; height: 20px; margin-top: 2px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 12px; font-weight: 700; color: #FFFFFF;
+}
+.dot.keep { background: var(--keep); }
+.dot.look { background: var(--look); }
+.dot.info { background: var(--quiet); }
+.row-title { font-weight: 600; }
+.row-body { color: var(--muted); font-size: 15px; }
+
+.split { display: grid; grid-template-columns: 1.3fr 1fr; gap: 48px; align-items: center; }
+.split .story { max-width: 300px; justify-self: center; }
+.story img { border-radius: 20px; border: 1px solid var(--divider); }
+.story figcaption { color: var(--muted); font-size: 14px; margin-top: 10px; text-align: center; }
+@media (max-width: 720px) { .split { grid-template-columns: 1fr; gap: 28px; } .split .story { max-width: 240px; } }
+
+.callout {
+  border-radius: 20px; padding: 28px; background: var(--card);
+  display: flex; gap: 24px; align-items: center; justify-content: space-between; flex-wrap: wrap;
+}
+.callout .app { display: flex; align-items: center; gap: 16px; }
+.callout .app img { width: 64px; height: 64px; border-radius: 15px; }
+
+/* Inner pages: a short night band for the title, then the app's report cards. */
+.band .page-hero { padding: 120px 20px 56px; }
+.band .page-hero h1 { font-size: 48px; line-height: 1.05; letter-spacing: -0.02em; margin: 0 0 12px; }
+.band .page-hero .eyebrow { color: rgba(255,255,255,.7); }
+.band .page-hero .lede { color: rgba(255,255,255,.8); margin: 0; }
+.band::before { background-image: url(assets/hero-wide.svg); background-position: right 70%; }
+.band::after { background: linear-gradient(90deg, rgba(8,28,31,.85) 0%, rgba(8,28,31,.6) 50%, rgba(8,28,31,.15) 100%); }
+.policy-layout {
+  display: grid; grid-template-columns: 200px minmax(0, 680px); gap: 56px;
+  padding-top: 40px; padding-bottom: 24px; justify-content: center;
+}
+.toc { position: sticky; top: 24px; align-self: start; display: flex; flex-direction: column; gap: 2px; }
+.toc a {
+  color: var(--muted); text-decoration: none; font-size: 15px;
+  padding: 6px 12px; margin-left: -12px; border-radius: 10px;
+}
+.toc a:hover { background: var(--card); color: var(--link); }
+.policy .summary { margin-bottom: 20px; }
+.policy section.card { margin: 0 0 20px; padding: 22px 24px; scroll-margin-top: 20px; }
+.policy .card .eyebrow { margin-top: 18px; }
+.policy .card .eyebrow:first-child { margin-top: 0; }
+.policy .card .list { background: var(--inset); margin: 6px 0 16px; }
+.policy ul { padding-left: 22px; }
+.policy li { margin-bottom: 8px; }
+.policy .row-title { font-weight: 600; }
+@media (max-width: 860px) {
+  .policy-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .toc { display: none; }
+}
+@media (max-width: 720px) {
+  .band::before { background-image: url(assets/hero-wide.svg); background-position: 72% 70%; }
+  .band .page-hero { padding: 104px 20px 40px; }
+  .band .page-hero h1 { font-size: 36px; }
+}
+
+/* Draft markings: remove before publishing. */
+.draft-banner {
+  background: var(--draft); color: var(--draft-text);
+  font-size: 14px; padding: 10px 20px; text-align: center; position: relative; z-index: 3;
+}
+mark.todo { background: var(--draft); color: var(--draft-text); border-radius: 4px; padding: 0 4px; }
+
+.site-footer { border-top: 1px solid var(--divider); padding: 32px 0 48px; color: var(--muted); font-size: 14px; }
+.site-footer .wrap { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
+.site-footer .wordmark { width: 96px; color: var(--text); }
+.site-footer nav a { margin-left: 18px; color: var(--muted); text-decoration: none; }
+.site-footer nav a:hover { color: var(--link); }
+.site-footer nav a:first-child { margin-left: 0; }
+
+@media (max-width: 480px) {
+  section { padding: 52px 0; }
+  h1 { font-size: 32px; }
+  h2 { font-size: 26px; }
+  .lede { font-size: 18px; }
+  .site-header nav a { padding: 7px 10px; }
+  .site-header .home .wordmark { width: 104px; }
+}
+
+/* Review accessibility: keyboard access and long contact addresses on small screens. */
+.skip-link { position: fixed; top: 8px; left: 8px; z-index: 20; transform: translateY(-160%); padding: 10px 16px; border-radius: 12px; background: var(--bg); color: var(--link); }
+.skip-link:focus { transform: translateY(0); }
+a:focus-visible, button:focus-visible { outline: 3px solid var(--link); outline-offset: 4px; }
+.night a:focus-visible { outline-color: #FFFFFF; }
+.policy a, .row-body, .callout .muted { overflow-wrap: anywhere; }
+.callout .app { flex: 1 1 360px; min-width: 0; }
+.callout .app > div { min-width: 0; }
+.callout .app img { flex: none; }
+.review-note { padding: 14px 16px; border-radius: 12px; background: var(--draft); color: var(--draft-text); }
+@media (max-width: 480px) {
+  .callout { padding: 22px 20px; }
+  .callout .app { align-items: flex-start; gap: 12px; }
+  .callout .app img { width: 48px; height: 48px; }
+  .callout h2 { font-size: 23px; }
+}
