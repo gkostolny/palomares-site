@@ -53,12 +53,15 @@ All assets are local in `assets/`:
   iPhone 17 Pro / iOS 27 Simulator, dark appearance and a 9:41 status bar. They show
   the bundled Palomares Road sample `2026-10-24_122105_Sample`, replacing the old
   Redwood sample. Captures keep the complete screen and Apple Maps attribution.
+  `screen-ride.jpg` was recaptured later on October 26 (debug build `d1c3f78-dirty`,
+  map base forced with `mapbase=map`) to show the current tabs: Ride, My rides,
+  Coaching, Guide.
 - `share-story.jpg`: the app-generated Story picture from that same sample,
   retrieved from the debug render `tmp/sharepic.png`; no map or photo was invented.
 
 Launch the sample with `SIMCTL_CHILD_RIDELOGGER_DEMO` set to:
 
-- Ride: `ride=2026-10-24_122105_Sample;drawin=4`
+- Ride: `ride=2026-10-24_122105_Sample;drawin=4;mapbase=map`
 - Replay: `ride=2026-10-24_122105_Sample;replay=1;seek=5:20`
 - Corner: `ride=2026-10-24_122105_Sample;corner=11`
 - Story: `ride=2026-10-24_122105_Sample;sharepic=story`
