@@ -90,7 +90,7 @@ a { color: var(--link); text-underline-offset: 3px; text-decoration-thickness: 1
   background: linear-gradient(90deg, rgba(8,28,31,.82) 0%, rgba(8,28,31,.55) 45%, rgba(8,28,31,0) 75%);
 }
 .night > * { position: relative; z-index: 1; }
-.on-night .site-header { position: absolute; left: 0; right: 0; top: 0; }
+.on-night .site-header { position: absolute; left: 0; right: 0; top: 0; z-index: 2; }   /* above the hero, which `.night > *` also lifts to 1 */
 .hero { padding: 132px 0 96px; min-height: 620px; display: flex; align-items: center; }
 .hero h1 { font-size: 52px; line-height: 1.05; letter-spacing: -0.02em; margin: 0 0 18px; max-width: 12ch; }
 .hero .lede { color: rgba(255,255,255,.82); font-size: 21px; line-height: 1.45; max-width: 30em; margin: 0 0 28px; }
