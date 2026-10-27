@@ -8,6 +8,10 @@ stylesheet; no build step, external fonts, scripts, analytics or embedded forms.
   submissions, and email/TestFlight feedback. No public join link is available yet.
 - `privacy/`: the current app's location/sensor use, storage and deletion, sharing,
   review exports, TestFlight, Zoho email, and planned GitHub Pages hosting.
+- `data/`: the open-data page and the two ODbL files the app ships: `index-california.json`
+  (a copy of RideLogger's `RideLogger/Roads/index-california.json`) and `track-outlines.json`
+  (only the OpenStreetMap-derived fields of RideLogger's `TrackCards.json`). Refresh both whenever
+  an app release changes them.
 - `style.css`: neutral surfaces, teal controls, system fonts and the night road,
   following RideLogger's brand guide. Supports light/dark appearance and phone/
   desktop layouts. Skip links and visible keyboard focus are included.
