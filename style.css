@@ -255,7 +255,9 @@ section.grouped .list { background: var(--row); }
 
 .site-footer { border-top: 1px solid var(--divider); padding: 32px 0 48px; color: var(--muted); font-size: 14px; }
 .site-footer .wrap { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
-.site-footer .wordmark { width: 96px; color: var(--text); }
+/* The share signature, as the app signs pictures and clips: the wordmark, then the bold Roadster
+   (1.4x its capital height, same baseline, a 0.6x gap; ShareImages.wordmark). The wordmark keeps its 96 px. */
+.site-footer .signature { display: block; width: 146px; height: auto; aspect-ratio: 958.19 / 142; color: var(--text); }
 .site-footer nav a { margin-left: 18px; color: var(--muted); text-decoration: none; }
 .site-footer nav a:hover { color: var(--link); }
 .site-footer nav a:first-child { margin-left: 0; }
