@@ -20,8 +20,6 @@
   --on-fill: #FFFFFF;
   --keep: #248A3D;          /* the app's green "keep doing" */
   --look: #FF9500;          /* the app's amber "worth a look" (a marker, not text) */
-  --draft: #FFF4CC;
-  --draft-text: #5C4600;
   --night-top: #1A4A4F;     /* the night road's sky, for the hero's edges while the art loads */
   --night-bottom: #0B292D;
   color-scheme: light dark;
@@ -30,13 +28,13 @@
   :root:not([data-theme="light"]) {
     --bg: #000000; --grouped: #000000; --card: #1C1C1E; --row: #1C1C1E; --inset: #2C2C2E; --text: #FFFFFF;
     --muted: #AEAEB2; --divider: #38383A; --link: #26A6AD; --fill: #087F88;
-    --keep: #30D158; --look: #FF9F0A; --draft: #3A3000; --draft-text: #FFE58A;
+    --keep: #30D158; --look: #FF9F0A;
   }
 }
 :root[data-theme="dark"] {
   --bg: #000000; --grouped: #000000; --card: #1C1C1E; --row: #1C1C1E; --inset: #2C2C2E; --text: #FFFFFF;
   --muted: #AEAEB2; --divider: #38383A; --link: #26A6AD; --fill: #087F88;
-  --keep: #30D158; --look: #FF9F0A; --draft: #3A3000; --draft-text: #FFE58A;
+  --keep: #30D158; --look: #FF9F0A;
 }
 
 * { box-sizing: border-box; }
@@ -255,13 +253,6 @@ section.grouped .list { background: var(--row); }
   .band .page-hero h1 { font-size: 36px; }
 }
 
-/* Draft markings: remove before publishing. */
-.draft-banner {
-  background: var(--draft); color: var(--draft-text);
-  font-size: 14px; padding: 10px 20px; text-align: center; position: relative; z-index: 3;
-}
-mark.todo { background: var(--draft); color: var(--draft-text); border-radius: 4px; padding: 0 4px; }
-
 .site-footer { border-top: 1px solid var(--divider); padding: 32px 0 48px; color: var(--muted); font-size: 14px; }
 .site-footer .wrap { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
 .site-footer .wordmark { width: 96px; color: var(--text); }
@@ -287,7 +278,6 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--link); outline-
 .callout .app { flex: 1 1 360px; min-width: 0; }
 .callout .app > div { min-width: 0; }
 .callout .app img { flex: none; }
-.review-note { padding: 14px 16px; border-radius: 12px; background: var(--draft); color: var(--draft-text); }
 @media (max-width: 480px) {
   .callout { padding: 22px 20px; }
   .callout .app { align-items: flex-start; gap: 12px; }

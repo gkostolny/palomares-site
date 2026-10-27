@@ -1,6 +1,6 @@
 # palomares-site
 
-Draft pages for palomares.app, intended for GitHub Pages. Plain HTML and one
+Pages for palomares.app, served by GitHub Pages. Plain HTML and one
 stylesheet; no build step, external fonts, scripts, analytics or embedded forms.
 
 - `index.html`: the night-road holding page and a link to beta information.
@@ -13,24 +13,26 @@ stylesheet; no build step, external fonts, scripts, analytics or embedded forms.
   desktop layouts. Skip links and visible keyboard focus are included.
 - `.nojekyll`: serve the static files directly when Pages is enabled.
 
-## Review status — October 26, 2026
+## Status — October 26, 2026
 
-These pages remain local drafts, with visible draft banners and `noindex`. GitHub
-confirms this repository is public, the default branch is `main`, and Pages is off.
-The October 26 update is not publication or final approval of page copy.
-
-Before publication:
+Draft banners and `noindex` removed; the privacy policy is effective October 26, 2026
+(change the date in `privacy/index.html` if it publishes later). The Send for review
+section now lists the ride title, ride notes and motorcycle name, which review copies
+keep. Gabe asked for both on October 26; a read-through of all three pages' copy is
+still open. This repository is public, so
+a push shows the pages on GitHub even before Pages is on.
 
 The policy names **K. Gabriel Coelho-Kostolny** as publisher. Beta emails, submitted
 rides, attachments and extracted copies are kept through the beta. The copies we
 control are deleted within 90 days after it ends. Earlier deletion requests can
 be sent to beta@palomares.app. Include that cleanup in the beta closeout process.
 
-1. Review the remaining page copy and current screenshots. The app's branding/copy
+Still to do:
+
+1. Read through the three pages' copy and screenshots. The app's branding/copy
    approval record is in RideLogger's `docs/design/palomares-branding/CONTEXT.md`.
 2. Enable GitHub Pages, verify palomares.app, configure web DNS while preserving
-   Zoho's email records, and check HTTPS. Remove draft markings after review and
-   set the privacy policy's effective date when publishing.
+   Zoho's email records, and check HTTPS (RideLogger's `docs/TESTFLIGHT-PLAN.md`, section 3).
 3. Add the actual TestFlight join link only when the public beta is available.
 
 The first friends pilot uses email and TestFlight feedback. A hosted feedback form
