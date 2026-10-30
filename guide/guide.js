@@ -337,7 +337,8 @@
   let listRegion = null, fitNext = false, shownKey = '', everShown = false;
   /** The list and the map's roads become the curvy roads in view (through roads, as the app's default). */
   async function refreshInView({ force = false } = {}) {
-    if (S.road || !browsing()) return;
+    // before MapKit is ready its region is 0°, 0° (and our fits are dropped): wait for the first real view
+    if (S.road || !browsing() || !appleMap.ready) return;
     const mk = window.mapkit, reg = appleMap.map.region;
     listRegion = new mk.CoordinateRegion(new mk.Coordinate(reg.center.latitude, reg.center.longitude),
       new mk.CoordinateSpan(reg.span.latitudeDelta, reg.span.longitudeDelta));
@@ -614,7 +615,9 @@
       container.classList.add('g-waiting');
       mk.addEventListener('configuration-change', e => {
         if (e.status !== 'Initialized') return;
+        this.ready = true;
         if (this.scene) this.draw(this.scene);
+        setTimeout(() => refreshInView(), 400);   // a region set from code may not report its change
         setTimeout(() => container.classList.remove('g-waiting'), 50);
       });
       setTimeout(() => container.classList.remove('g-waiting'), 4000);   // never hidden for long
