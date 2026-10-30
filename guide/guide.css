@@ -148,6 +148,7 @@ section.grouped .g-field, .g-body .g-field { background: var(--card); }
 .g-title { display: flex; gap: 14px; align-items: center; }
 .g-title > div { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .g-title .sub { font-size: 15px; color: var(--muted); margin: 0; }
+.g-title .map { font-size: 15px; font-weight: 500; margin: 0; }
 .g-ring { flex: none; }
 .g-ring .track { stroke: var(--g-track); }
 .g-ring .value { stroke: var(--link); }

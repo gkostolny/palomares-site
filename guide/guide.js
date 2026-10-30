@@ -323,6 +323,7 @@
     const body = $('#g-road');
     if (!r) {
       $('#g-road-name').textContent = 'Road not found';
+      $('#g-road-map').hidden = true;
       $('#g-road-sub').textContent = r === undefined ? 'The road library didn’t load. Check your connection and try again.'
         : 'The road library has changed since this link was made. Search for a town or ZIP to find it again.';
       $('#g-road-ring').innerHTML = '';
@@ -337,6 +338,9 @@
     $('#g-back').textContent = S.at ? `‹ Roads near ${S.place === 'your location' ? 'you' : shortPlace() || 'here'}` : '‹ Roads nearby';
     $('#g-back').href = href({ ...S, road: null, at: S.at || l[Math.floor(l.length / 2)], place: S.at ? S.place : '' });
     $('#g-road-name').textContent = r.name;
+    // a riders' name leads, the map's under it (written by the build, as the app's RoadWords.mapNameLine)
+    $('#g-road-map').hidden = !r.mapLine;
+    $('#g-road-map').textContent = r.mapLine || '';
     const sub = [STATES[r.state] || r.state, `${r.miles.toFixed(1)} mi`];
     if (S.at) {
       const m = milesTo(S.at, l).toFixed(1);
