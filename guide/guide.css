@@ -65,7 +65,7 @@ section.grouped .g-field, .g-body .g-field { background: var(--card); }
 .g-chip[aria-pressed="true"] { background: var(--fill); color: var(--on-fill); font-weight: 600; }
 .g-chip:hover { filter: brightness(.97); }
 .g-chip:focus-visible, .g-row:focus-visible, .g-loop:focus-visible, .g-more:focus-visible, .g-rates summary:focus-visible,
-.g-icon-button:focus-visible, .g-pick a:focus-visible, .g-pick button:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; }
+.g-icon-button:focus-visible, .g-pick a:focus-visible, .g-pick button:focus-visible { outline: 3px solid var(--link); outline-offset: -3px; }
 
 /* Rows: the road's shape, its numbers, the rating ring */
 .g-list { list-style: none; margin: 0; padding: 4px 8px; }
@@ -130,12 +130,16 @@ section.grouped .g-field, .g-body .g-field { background: var(--card); }
 .g-pickwrap { position: absolute; left: 0; right: 0; bottom: 12px; z-index: 3; display: flex; justify-content: center; pointer-events: none; padding: 0 12px; }
 .g-pick {
   pointer-events: auto; background: var(--row); color: var(--text); border-radius: 16px; box-shadow: var(--g-shadow);
-  padding: 10px 6px 10px 14px; display: flex; gap: 12px; align-items: center; max-width: 100%;
+  padding: 0 6px 0 0; display: flex; align-items: center; max-width: 100%; overflow: hidden;
 }
-.g-pick a { color: var(--text); text-decoration: none; font-weight: 600; font-size: 16px; display: block; }
-.g-pick a:hover { color: var(--link); }
+.g-pick-open {
+  display: flex; gap: 12px; align-items: center; min-width: 0; padding: 10px 6px 10px 14px; min-height: 60px;
+  color: var(--text); text-decoration: none; border-radius: 16px 0 0 16px;
+}
+.g-pick-open:hover .name { color: var(--link); }
+.g-pick .text { display: flex; flex-direction: column; min-width: 0; }
+.g-pick .name { font-weight: 600; font-size: 16px; }
 .g-pick .sub { font-size: 13px; color: var(--muted); }
-.g-pick > div { min-width: 0; }
 .g-pick button {
   flex: none; width: 44px; height: 44px; border: 0; background: none; color: var(--muted); font-size: 22px; cursor: pointer; border-radius: 12px;
 }

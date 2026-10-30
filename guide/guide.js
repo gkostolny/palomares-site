@@ -518,9 +518,10 @@
     $$('.g-row.is-picked').forEach(a => a.classList.remove('is-picked'));
     if (!r) { wrap.hidden = true; wrap.innerHTML = ''; return; }
     const n = r.loops ? r.loops.length : r.loopCount;
-    wrap.innerHTML = `<div class="g-pick">${ringSmall(r.score)}<div>
-        <a href="${esc(href({ ...S, road: r.ref }))}" data-ref="${esc(r.ref)}">${esc(r.name)} ›</a>
-        <span class="sub">${r.miles.toFixed(1)} mi · ${r.corners} curves${n ? ` · ${n} ${n === 1 ? 'loop' : 'loops'}` : ''}</span></div>
+    // the whole card opens the road (Gabe: not just its name); only × closes it
+    wrap.innerHTML = `<div class="g-pick"><a class="g-pick-open" href="${esc(href({ ...S, road: r.ref }))}" data-ref="${esc(r.ref)}">
+        ${ringSmall(r.score)}<span class="text"><span class="name">${esc(r.name)} ›</span>
+        <span class="sub">${r.miles.toFixed(1)} mi · ${r.corners} curves${n ? ` · ${n} ${n === 1 ? 'loop' : 'loops'}` : ''}</span></span></a>
       <button type="button" aria-label="Close">×</button></div>`;
     wrap.hidden = false;
     const row = $(`.g-row[data-ref="${CSS.escape(r.ref)}"]`);
