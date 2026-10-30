@@ -104,9 +104,9 @@
 
   let meta = null;
   const tileCache = new Map(), roads = new Map(), joinCache = new Map();
-  const getJSON = url => fetch(url).then(r => { if (!r.ok) throw new Error(url + ' ' + r.status); return r.json(); });
+  const getJSON = (url, init) => fetch(url, init).then(r => { if (!r.ok) throw new Error(url + ' ' + r.status); return r.json(); });
   function loadMeta() {
-    return meta ? Promise.resolve(meta) : getJSON('data/meta.json').then(m => { meta = m; meta.tileSet = new Set(m.tiles); return m; });
+    return meta ? Promise.resolve(meta) : getJSON('data/meta.json', { cache: 'no-cache' }).then(m => { meta = m; meta.tileSet = new Set(m.tiles); return m; });
   }
   function loadTile(name) {
     if (!meta.tileSet.has(name)) return Promise.resolve([]);

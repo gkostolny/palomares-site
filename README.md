@@ -27,6 +27,8 @@ scripts are the Guide's own and Apple's MapKit JS, on `guide/` alone.
     loop lines into them, puts loops' connecting roads in `joins/`, and town and ZIP
     centers from the Census 2024 Gazetteer in `places/` and `zips/`. Rerun it whenever
     the road index or the words change (with `tools/open-data sync`).
+  - Caching: GitHub Pages lets browsers reuse files for 10 minutes, so `index.html` loads `guide.js` and `guide.css`
+    with `?v=<date><letter>`: bump it with every change to either. `data/meta.json` is always revalidated.
   - `mapkit-token.js`: the MapKit JS token from Gabe's developer account (Certificates,
     Identifiers & Profiles ▸ Services ▸ Maps ▸ Tokens; MapKit JS, domain palomares.app,
     no expiry). Apple honors it only on palomares.app; anywhere else, or if Apple's code
