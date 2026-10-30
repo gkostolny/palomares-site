@@ -139,7 +139,7 @@ p, ul, ol { margin: 0 0 14px; }
 
 /* Screens: real app screenshots, framed like the phone. */
 .screens {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;
   margin-top: 36px; align-items: start;
 }
 .screen figure, figure.screen { margin: 0; }
