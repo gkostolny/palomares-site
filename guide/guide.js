@@ -304,8 +304,8 @@
     fitNext = false;
     if (!S.at) {
       current = null; setView('list');
-      setStatus(browsing() ? 'Curvy roads across the lower 48 for now. Search for a town, ZIP or road, use your location, or zoom the map in on an area. The search runs in your browser; nothing is sent to us.'
-        : 'Curvy roads across the lower 48 for now. Search for a town, ZIP or road, or use your location. The search runs in your browser; nothing is sent to us.');
+      setStatus(browsing() ? 'Curvy paved roads across the lower 48 for now. Search for a town, ZIP or road, use your location, or zoom the map in on an area. The search runs in your browser; nothing is sent to us.'
+        : 'Curvy paved roads across the lower 48 for now. Search for a town, ZIP or road, or use your location. The search runs in your browser; nothing is sent to us.');
       mapView.draw({ roads: [], fit: 'us' });
       return;
     }
@@ -316,7 +316,7 @@
     setView('list');
     const n = found.list.length;
     const where = S.place === 'your location' ? 'of you' : S.place ? `of ${shortPlace()}` : '';
-    if (!n) setStatus(`No curvy roads in the library within ${WIDER} miles${where ? ' ' + where : ''}. The library covers the lower 48 for now.`);
+    if (!n) setStatus(`No curvy paved roads in the library within ${WIDER} miles${where ? ' ' + where : ''}. The library covers the lower 48 for now.`);
     else setStatus(`${n} ${n === 1 ? 'road' : 'roads'} within ${found.radius} miles${where ? ' ' + where : ''}`);
     drawList(focus);
   }
@@ -381,7 +381,7 @@
     const n = found.length;
     if (!everShown && !S.at && country) return drawList(false, 'none');   // the opening line stays on the first look
     everShown = true;
-    setStatus(!n ? 'No curvy roads in the library here. It covers the lower 48 for now.'
+    setStatus(!n ? 'No curvy paved roads in the library here. It covers the lower 48 for now.'
       : country ? `The ${kept.length} best rated roads in view. Zoom in for more.`
       : n > kept.length ? `The ${kept.length} best rated of ${n.toLocaleString()} roads in view. Zoom in for the rest.`
       : `${n} ${n === 1 ? 'road' : 'roads'} in view`);
@@ -484,7 +484,7 @@
         ${r.loops.map((lp, i) => `<button class="g-loop" type="button" data-loop="${i}" aria-pressed="false">
           <span class="t">${esc(lp.title)}</span><span class="d">${esc(lp.line)}</span></button>`).join('')}</section>` : ''}
       <section class="g-card" aria-labelledby="g-h-dirs"><h2 id="g-h-dirs">Directions with</h2>
-        <p class="small-note before">Roads change. Road notes and maps can be out of date. Check for closures, gravel and conditions yourself.</p>
+        <p class="small-note before">Roads change. Road notes and maps can be out of date. A road can still turn to gravel where the maps are wrong. Check for closures, gravel and conditions yourself.</p>
         <div class="g-dirs"><a class="g-button neutral" href="${esc(links.apple)}" target="_blank" rel="noopener">Apple Maps</a>
           <a class="g-button neutral" href="${esc(links.google)}" target="_blank" rel="noopener">Google Maps</a></div></section>
       <section class="g-card g-ride" aria-labelledby="g-h-ride"><h2 id="g-h-ride">Ride it with Palomares</h2>
