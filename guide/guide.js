@@ -363,9 +363,9 @@
         ${r.loops.map((lp, i) => `<button class="g-loop" type="button" data-loop="${i}" aria-pressed="false">
           <span class="t">${esc(lp.title)}</span><span class="d">${esc(lp.line)}</span></button>`).join('')}</section>` : ''}
       <section class="g-card" aria-labelledby="g-h-dirs"><h2 id="g-h-dirs">Directions with</h2>
+        <p class="small-note before">Roads change. Road notes and maps can be out of date. Check for closures, gravel and conditions yourself.</p>
         <div class="g-dirs"><a class="g-button neutral" href="${esc(links.apple)}" target="_blank" rel="noopener">Apple Maps</a>
-          <a class="g-button neutral" href="${esc(links.google)}" target="_blank" rel="noopener">Google Maps</a></div>
-        <p class="small-note">Roads change. Road notes and maps can be out of date. Check for closures, gravel and conditions yourself.</p></section>
+          <a class="g-button neutral" href="${esc(links.google)}" target="_blank" rel="noopener">Google Maps</a></div></section>
       <section class="g-card g-ride" aria-labelledby="g-h-ride"><h2 id="g-h-ride">Ride it with Palomares</h2>
         <p>Record the ride on your iPhone. Afterward, replay every corner of ${esc(r.name)} and see your lean along it.</p>
         <a class="g-button" href="../beta/">About the beta</a></section>
@@ -500,7 +500,14 @@
       });
       this.map.addEventListener('select', e => { if (e.overlay && e.overlay.data && e.overlay.data.ref) pick(e.overlay.data.ref); });
       // a fit asked for before MapKit finishes authorizing is dropped: fit again once it's ready
-      mk.addEventListener('configuration-change', e => { if (e.status === 'Initialized' && this.scene) this.draw(this.scene); });
+      // and keep the map out of sight until then: before it, MapKit shows 0°, 0° (off West Africa)
+      container.classList.add('g-waiting');
+      mk.addEventListener('configuration-change', e => {
+        if (e.status !== 'Initialized') return;
+        if (this.scene) this.draw(this.scene);
+        setTimeout(() => container.classList.remove('g-waiting'), 50);
+      });
+      setTimeout(() => container.classList.remove('g-waiting'), 4000);   // never hidden for long
       matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
         this.map.colorScheme = isDark() ? mk.Map.ColorSchemes.Dark : mk.Map.ColorSchemes.Light;
         if (this.scene) this.draw({ ...this.scene, fit: 'none' });
@@ -554,6 +561,7 @@
     draw(scene) { this.scene = scene; if (this.impl) this.impl.draw(scene); },
     use(impl, note) {
       const container = $('#g-map');
+      container.classList.remove('g-waiting');
       try { impl.mount(container); } catch (e) { if (impl !== plainMap) return this.use(plainMap, MAP_FAILED); throw e; }
       this.impl = impl;
       const n = $('#g-mapnote');

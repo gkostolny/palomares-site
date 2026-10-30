@@ -116,7 +116,8 @@ section.grouped .g-field, .g-body .g-field { background: var(--card); }
 .g-mapwrap { position: relative; height: 300px; background: #E8EBE5; overflow: hidden; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .g-mapwrap { background: #1F2326; } }
 :root[data-theme="dark"] .g-mapwrap { background: #1F2326; }
-#g-map { position: absolute; inset: 0; }
+#g-map { position: absolute; inset: 0; transition: opacity .25s; }
+#g-map.g-waiting { opacity: 0; }
 .g-plain { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .g-plain .hit { fill: none; stroke: transparent; stroke-width: 16; stroke-linecap: round; stroke-linejoin: round; cursor: pointer; pointer-events: stroke; }
 .g-mapnote {
@@ -187,6 +188,7 @@ section.grouped .g-field, .g-body .g-field { background: var(--card); }
 .g-dirs { display: flex; gap: 10px; }
 .g-dirs a, .guide .g-dirs a { flex: 1 1 0; background: var(--g-tint); }
 .g-card .small-note { margin: 10px 0 0; font-size: 13px; color: var(--muted); }
+.g-card .small-note.before { margin: 0 0 12px; }  /* read before leaving for directions */
 .g-ride { background: var(--night-bottom); color: #FFFFFF; }
 .g-ride p { margin: 0 0 12px; font-size: 15px; line-height: 1.45; color: rgba(255,255,255,.85); }
 .g-ride .g-button { background: #087F88; color: #FFFFFF; }
