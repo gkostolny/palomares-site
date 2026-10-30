@@ -794,28 +794,35 @@
     else { showOptions([]); setStatus(`No town, ZIP or road in the lower 48 matches “${text}”.`, true); }
   });
 
-  /** The rider's location (the browser asks first), then roads around it. `quiet`: on opening the Guide, a refusal
-      falls back to the last town or the country, without an error line. */
-  function locate({ quiet = false, fallback = null } = {}) {
+  /** The rider's location (the browser asks first), then roads around it. Always ends in roads or a message: a watchdog
+      covers a browser that never answers (an unanswered prompt left the iPad's button doing nothing, 2026-10-29). */
+  function locate() {
     const b = $('#g-locate');
-    if (!navigator.geolocation) {
-      if (quiet) return fallback && fallback();
-      return setStatus('This browser can’t share a location. Search for a town, ZIP or road instead.', true);
-    }
+    if (!navigator.geolocation) return setStatus('This browser can’t share a location. Search for a town, ZIP or road instead.', true);
+    if (b.getAttribute('aria-busy') === 'true') return;
     b.setAttribute('aria-busy', 'true');
     setStatus('Finding your location…');
+    let done = false;
+    const fail = denied => {
+      if (done) return;
+      done = true;
+      b.removeAttribute('aria-busy');
+      setStatus(denied ? 'Location is off for this site. Allow it in your browser’s settings, or search for a town, ZIP or road.'
+        : 'Your location couldn’t be found. Search for a town, ZIP or road instead.', true);
+    };
+    const watchdog = setTimeout(() => fail(false), 20000);
     navigator.geolocation.getCurrentPosition(pos => {
+      if (done) return;
+      done = true;
+      clearTimeout(watchdog);
       b.removeAttribute('aria-busy');
       input.value = '';
       // a place, not a fix: kept to about 100 m in the address (and never sent anywhere)
       const at = [pos.coords.latitude, pos.coords.longitude];
       fitNext = true;
-      go({ at, place: 'your location', road: null }, { focus: false, replace: quiet });
-    }, () => {
-      b.removeAttribute('aria-busy');
-      if (quiet) return fallback ? fallback() : render();
-      setStatus('Your browser didn’t share a location. Search for a town, ZIP or road instead.', true);
-    }, { enableHighAccuracy: false, timeout: 15000, maximumAge: 600000 });
+      go({ at, place: 'your location', road: null }, { focus: false });
+    }, err => { clearTimeout(watchdog); fail(err && err.code === 1); },
+    { enableHighAccuracy: false, timeout: 15000, maximumAge: 600000 });
   }
   $('#g-locate').addEventListener('click', () => locate());
 
@@ -861,15 +868,11 @@
   // MARK: Start
 
   startMap();
-  // Opening the Guide with no place: roads around the rider straight away (Gabe, 2026-10-29), the browser asking first;
-  // refused or unavailable, the last town chosen here, else the country's best roads
+  // Opening with no place: the last town chosen here, else the country's best roads (Gabe preferred the country to a
+  // location prompt on opening, 2026-10-29); the location only when asked for
   if (!S.at && !S.road) {
     const last = store.get('guide.last');
-    const useLast = () => {
-      if (last && Array.isArray(last.at)) { S = { ...S, at: last.at, place: last.place || '' }; history.replaceState(null, '', href(S)); }
-      render();
-    };
-    render();
-    locate({ quiet: true, fallback: useLast });
-  } else render();
+    if (last && Array.isArray(last.at)) { S = { ...S, at: last.at, place: last.place || '' }; history.replaceState(null, '', href(S)); }
+  }
+  render();
 })();
