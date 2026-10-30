@@ -279,3 +279,4 @@ section.grouped .g-field, .g-body .g-field { background: var(--card); }
   .g-credit a { color: #70C3CE; }
   .g-suggest { background: #0F3438; border-color: rgba(255,255,255,.14); }
 }
+.g-title .sub .mapped { display: block; margin-top: 4px; }   /* mapped, not ridden (Gabe, 2026-10-29) */

@@ -347,6 +347,7 @@
       sub.push(S.place === 'your location' ? `${m} mi from you in a straight line` : `${m} mi from ${shortPlace() || 'here'} in a straight line`);
     }
     $('#g-road-sub').textContent = sub.filter(Boolean).join(' · ');
+    $('#g-road-sub').insertAdjacentHTML('beforeend', '<span class="mapped">Mapped from open data. We haven’t ridden it.</span>');  // Gabe approved 2026-10-29: the road is mapped, not ridden (the app card's Mapped chip)
     const ring = $('#g-road-ring');
     ring.setAttribute('aria-label', `Rating ${r.score} of 100`);
     ring.innerHTML = ringBig(r.score);
