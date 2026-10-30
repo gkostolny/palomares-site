@@ -123,8 +123,8 @@
   const overviewCache = new Map();
   function loadOverview(name) {
     if (!overviewCache.has(name)) {
-      overviewCache.set(name, getJSON(`data/overview/${name}.json`).then(rows => rows.map(([ref, name, score, miles, cpm, corners, loopCount, loopRank, line]) =>
-        ({ ref, name, score, miles, cpm, corners, loopCount, loopRank, line, overview: true })))
+      overviewCache.set(name, getJSON(`data/overview/${name}.json`).then(rows => rows.map(([ref, name, score, miles, cpm, corners, loopCount, loopRank, line, bestLoop]) =>
+        ({ ref, name, score, miles, cpm, corners, loopCount, loopRank, line, bestLoop, overview: true })))
         .catch(e => { overviewCache.delete(name); throw e; }));
     }
     return overviewCache.get(name);
@@ -160,7 +160,7 @@
     rating: n => n.road.score,
     nearest: n => -n.miles,
     curves: n => n.road.cpm,
-    loops: n => (n.road.loops ? (n.road.loops[0] ? n.road.loops[0].rank : 0) : n.road.loopRank),
+    loops: n => (n.road.loops ? Math.max(0, ...n.road.loops.map(lp => lp.rank)) : n.road.loopRank),
   };
   /** RideKit RoadFinder.sorted: ties to the higher rating, then the nearer, then the name. */
   function sorted(list, sort) {
@@ -389,13 +389,17 @@
   }
 
   function drawList(focus, fit = 'roads') {
-    const list = sorted(current.list, S.sort), parts = partNames(list);
+    // Best for a loop lists only roads with a loop, each with its best one (Gabe, 2026-10-29)
+    const forLoops = S.sort === 'loops';
+    const list = sorted(forLoops ? current.list.filter(n => n.road.bestLoop) : current.list, S.sort), parts = partNames(list);
+    if (forLoops) setStatus(list.length ? `${list.length} ${list.length === 1 ? 'road' : 'roads'} in view with a loop` : 'No loops through the roads here. Move the map or zoom out.');
     const narrow = !matchMedia('(min-width: 900px)').matches;
     listEl.innerHTML = list.map((n, i) => {
       const r = n.road;
       return `<li${narrow && i >= FIRST_ROWS ? ' hidden' : ''}><a class="g-row" data-ref="${esc(r.ref)}" href="${esc(href({ ...S, road: r.ref }))}">
         ${tile(pts(r))}
         <span class="g-row-text"><span class="g-row-name">${esc(nameOf(r, parts))}</span>
+          ${forLoops ? `<span class="g-row-sub">${esc(r.bestLoop)}</span>` : ''}
           <span class="g-row-sub">${r.miles.toFixed(1)} mi · ${r.cpm.toFixed(1)} curves a mile</span>
           ${S.at && n.miles < 100 ? `<span class="g-row-sub">${n.miles.toFixed(1)} mi away in a straight line</span>` : ''}</span>
         ${ringSmall(r.score)}</a></li>`;
