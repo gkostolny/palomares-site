@@ -1,0 +1,278 @@
+/* The Guide: roads near a town, ZIP or the rider's location, on Apple's map. Wide windows: the map is the page and
+   the list floats over it, as the iPad Guide. Narrow ones: search, then the map, then the list. Tokens from style.css. */
+:root { --g-tint: #E3EFF0; --g-track: #DCEBEC; --g-panel: rgba(255,255,255,.97); --g-shadow: 0 12px 32px rgba(0,0,0,.16); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --g-tint: rgba(38,166,173,.2); --g-track: #2C3E40; --g-panel: rgba(28,28,30,.97); --g-shadow: 0 12px 32px rgba(0,0,0,.5); }
+}
+:root[data-theme="dark"] { --g-tint: rgba(38,166,173,.2); --g-track: #2C3E40; --g-panel: rgba(28,28,30,.97); --g-shadow: 0 12px 32px rgba(0,0,0,.5); }
+
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* The header: the night road's dark sky as a plain bar (the map needs the room). */
+.guide-page .site-header { background: var(--night-bottom); }
+.guide-page .site-header .home, .guide-page .site-header nav a { color: #FFFFFF; }
+.guide-page .site-header nav a:hover,
+.guide-page .site-header nav a[aria-current="page"] { background: rgba(255,255,255,.14); color: #FFFFFF; }
+.guide-page .site-header a:focus-visible { outline-color: #FFFFFF; }
+
+.guide [hidden] { display: none !important; }
+.guide h1 { font-size: 30px; line-height: 1.1; letter-spacing: -0.01em; margin: 0; }
+.guide h2 { font-size: 20px; line-height: 1.25; letter-spacing: 0; margin: 0 0 8px; }
+.g-head { padding: 20px 16px 12px; display: flex; flex-direction: column; gap: 12px; }
+.g-head h1:focus { outline: none; }
+.g-body { padding: 0 0 24px; }
+.g-status { margin: 0; font-size: 15px; color: var(--muted); }
+.g-status.error { color: var(--text); }
+
+/* Search: a town or ZIP, with suggestions (a combobox), and the location button. */
+.g-search { display: flex; gap: 8px; position: relative; margin: 0; }
+.g-field {
+  flex: 1 1 auto; display: flex; align-items: center; gap: 8px; min-width: 0;
+  background: var(--card); border-radius: 12px; padding: 0 12px; height: 44px;
+}
+section.grouped .g-field, .g-body .g-field { background: var(--card); }
+.g-field:focus-within { outline: 3px solid var(--link); outline-offset: 2px; }
+.g-field svg { flex: none; }
+.g-field input {
+  flex: 1 1 auto; min-width: 0; height: 100%; border: 0; background: transparent; color: var(--text);
+  font: inherit; font-size: 17px; outline: none; -webkit-appearance: none; appearance: none;
+}
+.g-field input::placeholder { color: var(--quiet); }
+.g-field input::-webkit-search-cancel-button { display: none; }
+.g-icon-button {
+  flex: none; width: 44px; height: 44px; border-radius: 12px; border: 0; padding: 0; cursor: pointer;
+  background: var(--fill); color: var(--on-fill); display: grid; place-items: center;
+}
+.g-icon-button:hover { filter: brightness(1.08); }
+.g-icon-button[aria-busy="true"] svg { animation: g-pulse 1s ease-in-out infinite alternate; }
+@keyframes g-pulse { from { opacity: 1; } to { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .g-icon-button[aria-busy="true"] svg { animation: none; } }
+.g-suggest {
+  position: absolute; left: 0; right: 52px; top: 50px; z-index: 30; margin: 0; padding: 6px; list-style: none;
+  background: var(--row); border: 1px solid var(--divider); border-radius: 14px; box-shadow: var(--g-shadow);
+  max-height: 320px; overflow: auto;
+}
+.g-suggest li { padding: 0 12px; min-height: 44px; display: flex; align-items: center; border-radius: 10px; cursor: pointer; }
+.g-suggest li .muted { margin-left: 6px; font-size: 15px; }
+.g-suggest li[aria-selected="true"], .g-suggest li:hover { background: var(--g-tint); }
+
+/* Sort chips */
+.g-chips { display: flex; gap: 8px; flex-wrap: wrap; padding: 4px 16px 8px; }
+.g-chip {
+  min-height: 44px; padding: 0 16px; border-radius: 22px; border: 0; cursor: pointer;
+  background: var(--card); color: var(--link); font: inherit; font-size: 15px;
+}
+.g-chip[aria-pressed="true"] { background: var(--fill); color: var(--on-fill); font-weight: 600; }
+.g-chip:hover { filter: brightness(.97); }
+.g-chip:focus-visible, .g-row:focus-visible, .g-loop:focus-visible, .g-more:focus-visible, .g-rates summary:focus-visible,
+.g-icon-button:focus-visible, .g-pick a:focus-visible, .g-pick button:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; }
+
+/* Rows: the road's shape, its numbers, the rating ring */
+.g-list { list-style: none; margin: 0; padding: 4px 8px; }
+.g-row {
+  display: flex; gap: 12px; align-items: center; padding: 10px 8px; border-radius: 12px;
+  color: var(--text); text-decoration: none; min-height: 76px;
+}
+.g-row:hover, .g-row.is-picked { background: var(--g-tint); }
+/* A road's shape as a little night road (the splash's glow on the night sky), on every background */
+.g-shape {
+  flex: none; width: 56px; height: 56px; border-radius: 12px;
+  background: radial-gradient(120% 90% at 50% 100%, #1D5A60 0%, #0B292D 70%); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+}
+.g-shape path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.g-shape .glow { stroke: #70C3CE; stroke-width: 6; opacity: .35; filter: blur(1.6px); }
+.g-shape .road { stroke: #EFFFFF; stroke-width: 2.2; }
+.g-row-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.g-row-name { font-size: 17px; font-weight: 600; line-height: 1.25; }
+.g-row-sub { font-size: 14px; line-height: 1.3; color: var(--muted); }
+/* The rating as a ring that fills to the score */
+.g-ring-sm { flex: none; width: 42px; height: 42px; }
+.g-ring-sm circle { fill: none; stroke-width: 4; stroke-linecap: round; }
+.g-ring-sm .track { stroke: var(--g-track); }
+.g-ring-sm .value { stroke: var(--g-ring, var(--link)); }
+.g-ring-sm text { fill: var(--text); font: 700 14px ui-rounded, -apple-system, BlinkMacSystemFont, sans-serif; }
+.g-more {
+  display: flex; width: 100%; align-items: center; justify-content: center; min-height: 44px;
+  border: 0; background: none; color: var(--link); font: inherit; font-size: 16px; font-weight: 600; cursor: pointer;
+}
+
+/* The list's foot: the beta invitation and the library's limits */
+.g-foot { padding: 8px 16px 0; display: flex; flex-direction: column; gap: 12px; }
+.g-foot .note { margin: 0; font-size: 13px; color: var(--muted); }
+.g-cta { background: var(--card); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.g-cta p { margin: 0; font-size: 15px; }
+.g-cta .title { font-weight: 600; }
+.g-cta .line { color: var(--muted); font-size: 14px; }
+.g-button {
+  display: flex; align-items: center; justify-content: center; min-height: 44px; border-radius: 22px;
+  background: var(--fill); color: var(--on-fill); text-decoration: none; font-weight: 600; font-size: 15px;
+}
+.g-button.neutral { background: var(--card); color: var(--link); }
+.g-button:hover { filter: brightness(1.08); }
+.g-button:focus-visible { outline: 3px solid var(--link); outline-offset: 3px; }
+.g-foot .wide-only { display: none; }
+
+/* The map: Apple's (MapKit JS), or the roads drawn on their own when it can't load */
+.g-mapwrap { position: relative; height: 300px; background: #E8EBE5; overflow: hidden; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .g-mapwrap { background: #1F2326; } }
+:root[data-theme="dark"] .g-mapwrap { background: #1F2326; }
+#g-map { position: absolute; inset: 0; }
+.g-plain { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.g-plain .hit { fill: none; stroke: transparent; stroke-width: 16; stroke-linecap: round; stroke-linejoin: round; cursor: pointer; pointer-events: stroke; }
+.g-mapnote {
+  position: absolute; right: 8px; bottom: 6px; z-index: 2; margin: 0; max-width: calc(100% - 16px);
+  font-size: 12px; color: var(--muted); background: var(--g-panel); padding: 3px 8px; border-radius: 6px;
+}
+.g-dot { width: 14px; height: 14px; border-radius: 50%; background: #1C1C1E; border: 3px solid #FFFFFF; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+
+/* The picked road's card, over the map */
+.g-pickwrap { position: absolute; left: 0; right: 0; bottom: 12px; z-index: 3; display: flex; justify-content: center; pointer-events: none; padding: 0 12px; }
+.g-pick {
+  pointer-events: auto; background: var(--row); color: var(--text); border-radius: 16px; box-shadow: var(--g-shadow);
+  padding: 10px 6px 10px 14px; display: flex; gap: 12px; align-items: center; max-width: 100%;
+}
+.g-pick a { color: var(--text); text-decoration: none; font-weight: 600; font-size: 16px; display: block; }
+.g-pick a:hover { color: var(--link); }
+.g-pick .sub { font-size: 13px; color: var(--muted); }
+.g-pick > div { min-width: 0; }
+.g-pick button {
+  flex: none; width: 44px; height: 44px; border: 0; background: none; color: var(--muted); font-size: 22px; cursor: pointer; border-radius: 12px;
+}
+
+/* One road */
+.g-back {
+  align-self: flex-start; display: inline-flex; align-items: center; min-height: 44px; margin: -10px 0 -6px;
+  font-size: 16px; text-decoration: none;
+}
+.g-back:hover { text-decoration: underline; }
+.g-title { display: flex; gap: 14px; align-items: center; }
+.g-title > div { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.g-title .sub { font-size: 15px; color: var(--muted); margin: 0; }
+.g-ring { flex: none; }
+.g-ring .track { stroke: var(--g-track); }
+.g-ring .value { stroke: var(--link); }
+.g-ring text { fill: var(--text); font: 700 19px ui-rounded, -apple-system, BlinkMacSystemFont, sans-serif; }
+.g-road { display: flex; flex-direction: column; gap: 16px; padding: 0 16px; }
+.g-card { background: var(--card); border-radius: 16px; padding: 16px; }
+.g-card > :last-child { margin-bottom: 0; }
+.g-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 10px; margin: 0; }
+.g-stats div { display: flex; flex-direction: column-reverse; gap: 2px; margin: 0; }
+.g-stats dt { font-size: 13px; color: var(--muted); }
+.g-stats dd { margin: 0; font: 600 20px/1.2 ui-rounded, -apple-system, BlinkMacSystemFont, sans-serif; }
+.g-words p { margin: 0 0 8px; font-size: 16px; line-height: 1.45; }
+.g-rates { padding: 0; }
+.g-rates summary {
+  list-style: none; cursor: pointer; min-height: 56px; padding: 0 16px; border-radius: 16px;
+  display: flex; align-items: center; justify-content: space-between; font-size: 17px; font-weight: 600;
+}
+.g-rates summary::-webkit-details-marker { display: none; }
+.g-rates summary::after { content: "›"; display: inline-block; color: var(--quiet); font-weight: 400; font-size: 22px; transition: transform .15s; }
+.g-rates[open] summary::after { transform: rotate(90deg); }
+.g-rates .inner { padding: 0 16px 16px; }
+.g-bar { display: grid; grid-template-columns: 9.5em 1fr 2.6em; gap: 10px; align-items: center; margin-bottom: 10px; font-size: 15px; }
+.g-bar .track { height: 8px; border-radius: 4px; background: var(--g-track); overflow: hidden; }
+.g-bar .track span { display: block; height: 100%; border-radius: 4px; background: var(--link); }
+.g-bar .w { font-size: 13px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.g-rates .note { font-size: 13px; color: var(--muted); margin: 6px 0 0; }
+.g-loops { padding-bottom: 6px; }
+.g-loop {
+  display: flex; width: 100%; text-align: left; flex-direction: column; gap: 2px; padding: 10px 8px; margin: 0 -8px;
+  width: calc(100% + 16px); border: 0; background: none; color: var(--text); font: inherit; cursor: pointer; border-radius: 10px; min-height: 44px;
+}
+.g-loop + .g-loop { border-top: 1px solid var(--divider); border-radius: 0 0 10px 10px; }
+.g-loop:hover, .g-loop[aria-pressed="true"] { background: var(--g-tint); }
+.g-loop .t { font-size: 16px; font-weight: 600; }
+.g-loop .d { font-size: 14px; color: var(--muted); }
+.g-dirs { display: flex; gap: 10px; }
+.g-dirs a, .guide .g-dirs a { flex: 1 1 0; background: var(--g-tint); }
+.g-card .small-note { margin: 10px 0 0; font-size: 13px; color: var(--muted); }
+.g-ride { background: var(--night-bottom); color: #FFFFFF; }
+.g-ride p { margin: 0 0 12px; font-size: 15px; line-height: 1.45; color: rgba(255,255,255,.85); }
+.g-ride .g-button { background: #087F88; color: #FFFFFF; }
+.g-ride .g-button:focus-visible { outline-color: #FFFFFF; }
+.g-credit { font-size: 12px; color: var(--muted); margin: 0; }
+.g-road .g-mapslot { display: none; }
+
+/* Phones and narrow windows: the road page's map sits in a rounded card under its name */
+@media (max-width: 899px) {
+  .guide[data-view="road"] .g-mapwrap { margin: 0 16px; height: 240px; border-radius: 18px; }
+  .guide[data-view="road"] .g-head { padding-bottom: 14px; }
+  .guide[data-view="road"] .g-body { padding-top: 16px; }
+  .guide[data-view="road"] { background: var(--grouped); }
+  .guide[data-view="road"] .g-card { background: var(--row); }
+  .guide[data-view="road"] .g-ride { background: var(--night-bottom); }
+  .guide[data-view="list"] .g-mapwrap { margin-bottom: 10px; }
+}
+
+/* Wide windows: the map fills the page under the header and the panel floats over it */
+@media (min-width: 900px) {
+  .guide {
+    position: relative; display: grid; grid-template-columns: 24px 380px 1fr; grid-template-rows: auto minmax(0, 1fr);
+    height: calc(100vh - 64px); height: calc(100dvh - 64px); min-height: 560px;
+  }
+  .g-mapwrap { grid-column: 1 / -1; grid-row: 1 / -1; height: auto; }
+  .g-panelbg {
+    grid-column: 2; grid-row: 1 / -1; margin: 24px 0; z-index: 4; border-radius: 22px;
+    background: var(--g-panel); box-shadow: var(--g-shadow);
+  }
+  .g-head { grid-column: 2; grid-row: 1; z-index: 5; margin-top: 24px; padding: 20px 20px 12px; }
+  .g-body { grid-column: 2; grid-row: 2; z-index: 5; margin-bottom: 24px; overflow: auto; overscroll-behavior: contain; padding-bottom: 16px; border-radius: 0 0 22px 22px; }
+  .g-chips { padding: 0 20px 8px; }
+  .g-list { padding: 0 12px; }
+  .g-row-name { font-size: 16px; }
+  .g-row-sub { font-size: 13px; }
+  .g-foot { border-top: 1px solid var(--divider); margin-top: 8px; padding: 12px 20px 0; }
+  .g-foot .wide-only { display: flex; }
+  .g-foot .narrow-only { display: none; }
+  .g-more { display: none; }
+  .g-list li[hidden] { display: block !important; }
+  .g-pickwrap { left: 428px; bottom: 24px; }
+  .g-mapnote { right: 16px; bottom: 12px; }
+  .g-road { padding: 0 20px; }
+  .g-card, .guide .g-card { background: var(--card); }
+  .guide + .site-footer { border-top: 0; }
+}
+.g-panelbg { display: none; }
+@media (min-width: 900px) { .g-panelbg { display: block; } }
+/* With a mouse the chips can be smaller and sit on one line in the panel, as in the mockup */
+@media (pointer: fine) and (min-width: 900px) {
+  .g-chips { gap: 6px; }
+  .g-chip { min-height: 34px; padding: 0 12px; font-size: 14px; }
+}
+
+/* Wide windows: the panel is the site's night sky (the splash and hero's deep teal, the night road glowing behind the
+   title), floating over Apple's map; white type, the road's glow for rings and bars, teal only on controls. The page
+   tokens are redefined inside it so everything in the panel follows. */
+@media (min-width: 900px) {
+  .g-panelbg {
+    background: linear-gradient(180deg, #1A4A4F 0%, #0F3438 38%, #0B292D 100%); box-shadow: 0 18px 40px rgba(0,0,0,.35);
+    overflow: hidden; position: relative;
+  }
+  .g-panelbg::before {
+    content: ""; position: absolute; left: 0; right: 0; top: 0; height: 240px; opacity: .55;
+    background: url(../assets/hero-wide.svg) 78% 62% / 260% auto no-repeat;
+    -webkit-mask-image: linear-gradient(180deg, #000 30%, transparent 100%); mask-image: linear-gradient(180deg, #000 30%, transparent 100%);
+  }
+  .g-head, .g-body, .g-pickwrap {
+    --text: #FFFFFF; --muted: rgba(255,255,255,.68); --quiet: rgba(255,255,255,.5); --divider: rgba(255,255,255,.12);
+    --card: rgba(255,255,255,.08); --row: #0F3438; --link: #70C3CE; --fill: #087F88; --on-fill: #FFFFFF;
+    --g-tint: rgba(112,195,206,.16); --g-track: rgba(255,255,255,.14); --g-ring: #70C3CE; --g-shadow: 0 12px 32px rgba(0,0,0,.45);
+    color: var(--text); color-scheme: dark;
+  }
+  .g-field { background: rgba(255,255,255,.14); }
+  .g-field input::placeholder { color: rgba(255,255,255,.55); }
+  .g-chip { background: rgba(255,255,255,.1); color: #FFFFFF; }
+  .g-chip[aria-pressed="true"] { background: #26A6AD; color: #06272A; }
+  .g-chip:hover { filter: brightness(1.15); }
+  .g-foot { border-top-color: rgba(255,255,255,.1); }
+  .g-button.neutral, .g-dirs a, .guide .g-dirs a { background: rgba(112,195,206,.16); color: #FFFFFF; }
+  .g-card, .guide .g-card { background: rgba(255,255,255,.07); }
+  .g-bar .track span { background: #70C3CE; }
+  .g-ring .track { stroke: rgba(255,255,255,.14); }
+  .g-ring .value { stroke: #70C3CE; }
+  .g-ride, .guide .g-ride { background: linear-gradient(135deg, #087F88 0%, #0B4F57 100%); }
+  .g-ride .g-button { background: #FFFFFF; color: #0B292D; }
+  .g-pick { background: #0B292D; }
+  .g-credit a { color: #70C3CE; }
+  .g-suggest { background: #0F3438; border-color: rgba(255,255,255,.14); }
+}
