@@ -421,6 +421,12 @@
     return { apple, google };
   }
 
+  /** An email to beta@ about a road, with its name and link filled in (the rider writes the rest). */
+  function reportLink(r) {
+    const link = `${location.origin}/guide/?road=${encodeURIComponent(r.ref)}`;
+    return `mailto:beta@palomares.app?subject=${encodeURIComponent(`Guide: ${r.name}`)}&body=${encodeURIComponent(`\n\n${r.name}, ${STATES[r.state] || r.state || ''}\n${link}`)}`;
+  }
+
   async function renderRoad(focus) {
     setView('road');
     loopShown = null;
@@ -477,6 +483,7 @@
       <section class="g-card g-ride" aria-labelledby="g-h-ride"><h2 id="g-h-ride">Ride it with Palomares</h2>
         <p>Record the ride on your iPhone. Afterward, replay every corner of ${esc(r.name)} and see your lean along it.</p>
         <a class="g-button" href="../beta/">About the beta</a></section>
+      <p class="g-credit">Something wrong with this road? <a href="${esc(reportLink(r))}">Tell us</a>.</p>
       <p class="g-credit">Road data © OpenStreetMap contributors, via Overture Maps. Elevation: USGS. <a href="../data/">Open data</a></p>`;
     mapView.draw({ roads: [{ road: r, selected: true }], center: S.at, label: shortPlace(), fit: 'roads', fitCenter: false });
     if (focus) $('#g-road-name').focus({ preventScroll: false });
