@@ -526,7 +526,9 @@
   function pick(ref) {
     if (S.road || !current) return;
     picked = ref;
-    showPick(roads.get(ref));
+    // zoomed out, the road is the overview's (not loaded in full): take it from the list on screen
+    const hit = current.list.find(n => n.road.ref === ref);
+    showPick(hit ? hit.road : roads.get(ref));
     mapView.draw({ roads: sorted(current.list, S.sort).map(n => ({ road: n.road, selected: n.road.ref === ref })), center: S.at, label: shortPlace(), fit: 'none' });
   }
 
