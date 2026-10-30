@@ -613,8 +613,15 @@
     mount(container) {
       const mk = window.mapkit;
       this.map = new mk.Map(container, {
-        showsCompass: mk.FeatureVisibility.Hidden, showsMapTypeControl: false, isRotationEnabled: false,
+        showsCompass: mk.FeatureVisibility.Hidden, showsMapTypeControl: true, isRotationEnabled: false,
         showsPointsOfInterest: false, colorScheme: isDark() ? mk.Map.ColorSchemes.Dark : mk.Map.ColorSchemes.Light,
+      });
+      // Apple's own map/satellite switcher (Gabe, 2026-10-29); the rider's choice is kept in this browser
+      const types = Object.values(mk.Map.MapTypes), saved = store.get('guide.mapType');
+      if (types.includes(saved)) this.map.mapType = saved;
+      this.map.addEventListener('map-type-change', () => {
+        store.set('guide.mapType', this.map.mapType);
+        if (this.scene) this.draw({ ...this.scene, fit: 'none' });
       });
       this.map.addEventListener('select', e => { if (e.overlay && e.overlay.data && e.overlay.data.ref) pick(e.overlay.data.ref); });
       // the list follows the map: pan or zoom anywhere and the roads in view are listed (after a search's fit too)
@@ -642,7 +649,9 @@
       map.removeOverlays(map.overlays);
       map.removeAnnotations(map.annotations);
       const coords = l => l.map(p => new mk.Coordinate(p[0], p[1]));
-      const dark = isDark(), accent = dark ? '#70C3CE' : '#087F88';
+      // imagery takes the night look whatever the appearance, as in the app (teal lines vanish on dark trees)
+      const imagery = map.mapType === mk.Map.MapTypes.Satellite || map.mapType === mk.Map.MapTypes.Hybrid;
+      const dark = isDark() || imagery, accent = dark ? '#70C3CE' : '#087F88';
       const style = (o) => new mk.Style({ lineCap: 'round', lineJoin: 'round', ...o });
       const items = [];
       if (scene.loop) {
