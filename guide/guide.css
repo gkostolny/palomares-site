@@ -2,9 +2,9 @@
    the list floats over it, as the iPad Guide. Narrow ones: search, then the map, then the list. Tokens from style.css. */
 :root { --g-tint: #E3EFF0; --g-track: #DCEBEC; --g-panel: rgba(255,255,255,.97); --g-shadow: 0 12px 32px rgba(0,0,0,.16); }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --g-tint: rgba(38,166,173,.2); --g-track: #2C3E40; --g-panel: rgba(28,28,30,.97); --g-shadow: 0 12px 32px rgba(0,0,0,.5); }
+  :root:not([data-theme="light"]) { --g-pick-bg: rgba(38,166,173,.3); --g-tint: rgba(38,166,173,.2); --g-track: #2C3E40; --g-panel: rgba(28,28,30,.97); --g-shadow: 0 12px 32px rgba(0,0,0,.5); }
 }
-:root[data-theme="dark"] { --g-tint: rgba(38,166,173,.2); --g-track: #2C3E40; --g-panel: rgba(28,28,30,.97); --g-shadow: 0 12px 32px rgba(0,0,0,.5); }
+:root[data-theme="dark"] { --g-pick-bg: rgba(38,166,173,.3); --g-tint: rgba(38,166,173,.2); --g-track: #2C3E40; --g-panel: rgba(28,28,30,.97); --g-shadow: 0 12px 32px rgba(0,0,0,.5); }
 
 .visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
@@ -73,7 +73,10 @@ section.grouped .g-field, .g-body .g-field { background: var(--card); }
   display: flex; gap: 12px; align-items: center; padding: 10px 8px; border-radius: 12px;
   color: var(--text); text-decoration: none; min-height: 76px;
 }
-.g-row:hover, .g-row.is-picked { background: var(--g-tint); }
+.g-row:hover { background: var(--g-tint); }
+/* the road picked on the map: a clear outline as well as the tint, so it's found after scrolling (Gabe: too faint in
+   dark mode on a phone) */
+.g-row.is-picked { background: var(--g-pick-bg, rgba(18,100,116,.14)); box-shadow: inset 0 0 0 2px var(--link); }
 /* A road's shape as a little night road (the splash's glow on the night sky), on every background */
 .g-shape {
   flex: none; width: 56px; height: 56px; border-radius: 12px;
@@ -263,7 +266,7 @@ section.grouped .g-field, .g-body .g-field { background: var(--card); }
   .g-head, .g-body, .g-pickwrap {
     --text: #FFFFFF; --muted: rgba(255,255,255,.68); --quiet: rgba(255,255,255,.5); --divider: rgba(255,255,255,.12);
     --card: rgba(255,255,255,.08); --row: #0F3438; --link: #70C3CE; --fill: #087F88; --on-fill: #FFFFFF;
-    --g-tint: rgba(112,195,206,.16); --g-track: rgba(255,255,255,.14); --g-ring: #70C3CE; --g-shadow: 0 12px 32px rgba(0,0,0,.45);
+    --g-tint: rgba(112,195,206,.16); --g-pick-bg: rgba(112,195,206,.24); --g-track: rgba(255,255,255,.14); --g-ring: #70C3CE; --g-shadow: 0 12px 32px rgba(0,0,0,.45);
     color: var(--text); color-scheme: dark;
   }
   .g-field { background: rgba(255,255,255,.14); }
