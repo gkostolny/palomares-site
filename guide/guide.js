@@ -8,6 +8,8 @@
   // browsing Apple's map: roads show once the view is at most this many degrees of latitude tall (about 70 miles),
   // and at most this many of the best rated are drawn and listed
   const BROWSE_SPAN = 1.0, BROWSE_MAX = 250;
+  // past this many degrees tall the map shows the best roads in the country (data/overview/top.json)
+  const OVERVIEW_SPAN = 6;
   const STATES = { AL: 'Alabama', AZ: 'Arizona', AR: 'Arkansas', CA: 'California', CO: 'Colorado', CT: 'Connecticut',
     DE: 'Delaware', DC: 'District of Columbia', FL: 'Florida', GA: 'Georgia', ID: 'Idaho', IL: 'Illinois', IN: 'Indiana',
     IA: 'Iowa', KS: 'Kansas', KY: 'Kentucky', LA: 'Louisiana', ME: 'Maine', MD: 'Maryland', MA: 'Massachusetts',
@@ -117,6 +119,16 @@
     return tileCache.get(name);
   }
   const homeTile = ref => ref.split('_').slice(0, 2).join('_');
+  /** The overview's roads (a line cut to ~10 points; the whole road loads with its page). */
+  const overviewCache = new Map();
+  function loadOverview(name) {
+    if (!overviewCache.has(name)) {
+      overviewCache.set(name, getJSON(`data/overview/${name}.json`).then(rows => rows.map(([ref, name, score, miles, cpm, corners, loopCount, loopRank, line]) =>
+        ({ ref, name, score, miles, cpm, corners, loopCount, loopRank, line, overview: true })))
+        .catch(e => { overviewCache.delete(name); throw e; }));
+    }
+    return overviewCache.get(name);
+  }
   async function road(ref) {
     await loadMeta();
     await loadTile(homeTile(ref));
@@ -148,7 +160,7 @@
     rating: n => n.road.score,
     nearest: n => -n.miles,
     curves: n => n.road.cpm,
-    loops: n => (n.road.loops[0] ? n.road.loops[0].rank : 0),
+    loops: n => (n.road.loops ? (n.road.loops[0] ? n.road.loops[0].rank : 0) : n.road.loopRank),
   };
   /** RideKit RoadFinder.sorted: ties to the higher rating, then the nearer, then the name. */
   function sorted(list, sort) {
@@ -330,26 +342,23 @@
     listRegion = new mk.CoordinateRegion(new mk.Coordinate(reg.center.latitude, reg.center.longitude),
       new mk.CoordinateSpan(reg.span.latitudeDelta, reg.span.longitudeDelta));
     const c = [reg.center.latitude, reg.center.longitude], h = reg.span.latitudeDelta / 2, w = reg.span.longitudeDelta / 2;
-    if (reg.span.latitudeDelta > BROWSE_SPAN) {
-      if (!S.at || current) {
-        current = null; shownKey = ''; setView('list'); listEl.innerHTML = ''; moreEl.hidden = true;
-        if (everShown) setStatus('Zoom in on the lower 48 to see the roads.');   // the opening line already says so
-        mapView.draw({ roads: [], center: S.at, label: shortPlace(), fit: 'none' });
-      }
-      return;
-    }
+    // zoomed out past the tiles: the best roads from the overview (5° blocks for a state, the best 1,500 for the country)
+    const far = reg.span.latitudeDelta > BROWSE_SPAN, country = reg.span.latitudeDelta > OVERVIEW_SPAN;
     let lists;
     try {
       await loadMeta();
       const names = [];
-      for (let a = Math.floor(c[0] - h); a <= Math.floor(c[0] + h); a++)
-        for (let b = Math.floor(c[1] - w); b <= Math.floor(c[1] + w); b++) names.push(`${a}_${b}`);
-      if (!names.some(t => meta.tileSet.has(t))) {
+      const step = far ? meta.overviewBlock : 1;
+      for (let a = Math.floor((c[0] - h) / step) * step; a <= c[0] + h; a += step)
+        for (let b = Math.floor((c[1] - w) / step) * step; b <= c[1] + w; b += step) names.push(`${a}_${b}`);
+      const have = far ? new Set(meta.overview) : meta.tileSet;
+      if (!names.some(t => have.has(t))) {
         current = null; shownKey = ''; setView('list'); listEl.innerHTML = ''; moreEl.hidden = true;
         setStatus('The road library covers the lower 48 for now. Move the map there to see roads.');
         return mapView.draw({ roads: [], center: S.at, label: shortPlace(), fit: 'none' });
       }
-      lists = await Promise.all(names.map(loadTile));
+      lists = far ? await Promise.all((country ? ['top'] : names.filter(t => have.has(t))).map(loadOverview))
+        : await Promise.all(names.map(loadTile));
     } catch { return setStatus('The road library didn’t load. Check your connection and try again.', true); }
     if (S.road) return;
     const seen = new Set(), found = [];
@@ -369,8 +378,10 @@
     current = { list: kept.map(r => ({ road: r, miles: milesTo(S.at || c, pts(r)) })), inView: true };
     setView('list');
     const n = found.length;
+    if (!everShown && !S.at && country) return drawList(false, 'none');   // the opening line stays on the first look
     everShown = true;
     setStatus(!n ? 'No curvy roads in the library here. It covers the lower 48 for now.'
+      : country ? `The ${kept.length} best rated roads in view. Zoom in for more.`
       : n > kept.length ? `The ${kept.length} best rated of ${n.toLocaleString()} roads in view. Zoom in for the rest.`
       : `${n} ${n === 1 ? 'road' : 'roads'} in view`);
     drawList(false, 'none');
@@ -385,7 +396,7 @@
         ${tile(pts(r))}
         <span class="g-row-text"><span class="g-row-name">${esc(nameOf(r, parts))}</span>
           <span class="g-row-sub">${r.miles.toFixed(1)} mi · ${r.cpm.toFixed(1)} curves a mile</span>
-          ${S.at ? `<span class="g-row-sub">${n.miles.toFixed(1)} mi away in a straight line</span>` : ''}</span>
+          ${S.at && n.miles < 100 ? `<span class="g-row-sub">${n.miles.toFixed(1)} mi away in a straight line</span>` : ''}</span>
         ${ringSmall(r.score)}</a></li>`;
     }).join('');
     moreEl.hidden = !(narrow && list.length > FIRST_ROWS);
@@ -498,7 +509,7 @@
     const wrap = $('#g-pickwrap');
     $$('.g-row.is-picked').forEach(a => a.classList.remove('is-picked'));
     if (!r) { wrap.hidden = true; wrap.innerHTML = ''; return; }
-    const n = r.loops.length;
+    const n = r.loops ? r.loops.length : r.loopCount;
     wrap.innerHTML = `<div class="g-pick">${ringSmall(r.score)}<div>
         <a href="${esc(href({ ...S, road: r.ref }))}" data-ref="${esc(r.ref)}">${esc(r.name)} ›</a>
         <span class="sub">${r.miles.toFixed(1)} mi · ${r.corners} curves${n ? ` · ${n} ${n === 1 ? 'loop' : 'loops'}` : ''}</span></div>
@@ -754,9 +765,14 @@
     else { showOptions([]); setStatus(`No town, ZIP or road in the lower 48 matches “${text}”.`, true); }
   });
 
-  $('#g-locate').addEventListener('click', () => {
+  /** The rider's location (the browser asks first), then roads around it. `quiet`: on opening the Guide, a refusal
+      falls back to the last town or the country, without an error line. */
+  function locate({ quiet = false, fallback = null } = {}) {
     const b = $('#g-locate');
-    if (!navigator.geolocation) return setStatus('This browser can’t share a location. Search for a town or ZIP instead.', true);
+    if (!navigator.geolocation) {
+      if (quiet) return fallback && fallback();
+      return setStatus('This browser can’t share a location. Search for a town, ZIP or road instead.', true);
+    }
     b.setAttribute('aria-busy', 'true');
     setStatus('Finding your location…');
     navigator.geolocation.getCurrentPosition(pos => {
@@ -765,12 +781,14 @@
       // a place, not a fix: kept to about 100 m in the address (and never sent anywhere)
       const at = [pos.coords.latitude, pos.coords.longitude];
       fitNext = true;
-      go({ at, place: 'your location', road: null }, { focus: false });
+      go({ at, place: 'your location', road: null }, { focus: false, replace: quiet });
     }, () => {
       b.removeAttribute('aria-busy');
-      setStatus('Your browser didn’t share a location. Search for a town or ZIP instead.', true);
+      if (quiet) return fallback ? fallback() : render();
+      setStatus('Your browser didn’t share a location. Search for a town, ZIP or road instead.', true);
     }, { enableHighAccuracy: false, timeout: 15000, maximumAge: 600000 });
-  });
+  }
+  $('#g-locate').addEventListener('click', () => locate());
 
   // MARK: Clicks
 
@@ -814,9 +832,15 @@
   // MARK: Start
 
   startMap();
+  // Opening the Guide with no place: roads around the rider straight away (Gabe, 2026-10-29), the browser asking first;
+  // refused or unavailable, the last town chosen here, else the country's best roads
   if (!S.at && !S.road) {
     const last = store.get('guide.last');
-    if (last && Array.isArray(last.at)) { S = { ...S, at: last.at, place: last.place || '' }; history.replaceState(null, '', href(S)); }
-  }
-  render();
+    const useLast = () => {
+      if (last && Array.isArray(last.at)) { S = { ...S, at: last.at, place: last.place || '' }; history.replaceState(null, '', href(S)); }
+      render();
+    };
+    render();
+    locate({ quiet: true, fallback: useLast });
+  } else render();
 })();
