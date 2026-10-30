@@ -433,6 +433,9 @@
 
   async function renderRoad(focus) {
     setView('road');
+    // a road opens at its top: the panel (or the page, on phones) had kept the list's scroll
+    $('.g-body').scrollTop = 0;
+    if (!wide()) window.scrollTo(0, 0);
     loopShown = null;
     let r;
     try { r = await road(S.road); } catch { r = undefined; }
