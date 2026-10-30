@@ -5,6 +5,9 @@
   'use strict';
 
   const RADIUS = 20, WIDER = 50, FIRST_ROWS = 8;
+  // browsing Apple's map: roads show once the view is at most this many degrees of latitude tall (about 70 miles),
+  // and at most this many of the best rated are drawn and listed
+  const BROWSE_SPAN = 1.0, BROWSE_MAX = 250;
   const STATES = { AL: 'Alabama', AZ: 'Arizona', AR: 'Arkansas', CA: 'California', CO: 'Colorado', CT: 'Connecticut',
     DE: 'Delaware', DC: 'District of Columbia', FL: 'Florida', GA: 'Georgia', ID: 'Idaho', IL: 'Illinois', IN: 'Indiana',
     IA: 'Iowa', KS: 'Kansas', KY: 'Kentucky', LA: 'Louisiana', ME: 'Maine', MD: 'Maryland', MA: 'Massachusetts',
@@ -185,8 +188,15 @@
         .map(z => ({ label: z, detail: 'ZIP', at: zips[z] }));
     }
     const first = q[0];
-    if (!/[a-z]/.test(first)) return [];
-    const list = await loadPlaces(`data/places/${first}.json`);
+    if (!/[a-z0-9]/.test(first)) return [];
+    const [towns, roadsFound] = await Promise.all([
+      /[a-z]/.test(first) ? suggestTowns(q, await loadPlaces(`data/places/${first}.json`)) : [],
+      q.length >= 3 ? suggestRoads(q) : [],
+    ]);
+    // towns first, as most searches are for a place; then roads by name, best rated first
+    return [...towns.slice(0, roadsFound.length ? 4 : 8), ...roadsFound].slice(0, 8);
+  }
+  function suggestTowns(q, list) {
     // "sunol, ca", "sunol ca" or just "sunol"
     let name = q, st = '';
     const comma = q.split(',');
@@ -199,6 +209,27 @@
     }
     const exact = found.filter(p => fold(p[0]) === name), rest = found.filter(p => fold(p[0]) !== name);
     return [...exact, ...rest].slice(0, 8).map(p => ({ label: `${p[0]}, ${p[1]}`, at: [p[2], p[3]] }));
+  }
+  /** Roads by name (data/roads.json): every word typed starts a word of the road's name, the riders' or the map's
+      ("dragon" finds Tail of the Dragon, "calderwood" too). Ones whose name starts with it first, then by rating. */
+  async function suggestRoads(q) {
+    const data = await loadPlaces('data/roads.json');
+    if (!data.folded) data.folded = data.roads.map(r => (fold(r[0]) + ' ' + fold(r[1])).split(/[^a-z0-9]+/).filter(Boolean));
+    const words = q.split(/[^a-z0-9]+/).filter(Boolean);
+    if (!words.length) return [];
+    const starts = [], others = [];
+    for (let i = 0; i < data.roads.length && starts.length < 5; i++) {
+      const w = data.folded[i];
+      if (!words.every(x => w.some(y => y.startsWith(x)))) continue;
+      (fold(data.roads[i][0]).startsWith(q) || fold(data.roads[i][1]).startsWith(q) ? starts : others).push(i);
+    }
+    return [...starts, ...others].slice(0, 5).map(i => {
+      const [title, , ref, , where] = data.roads[i];
+      const town = typeof where === 'number' ? data.towns[where] : null;
+      return town
+        ? { label: title, detail: `road near ${town[0]}, ${town[1]}`, road: ref, at: [town[2], town[3]], place: `${town[0]}, ${town[1]}` }
+        : { label: title, detail: `road in ${STATES[where] || where}`, road: ref, at: null, place: '' };
+    });
   }
 
   // MARK: State in the address: ?at=lat,lon&place=Sunol, CA&sort=rating&road=ref
@@ -252,13 +283,20 @@
     setView('list');
     document.title = 'Guide · Palomares';
     $$('.g-chip').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.sort === S.sort)));
+    if (S.place && $('#g-q') !== document.activeElement) $('#g-q').value = S.place === 'your location' ? '' : S.place;
+    // on Apple's map the list is the roads in view: back from a road or a new sort, the map stays where it was
+    if (browsing() && listRegion && !fitNext) {
+      appleMap.map.region = listRegion;
+      return refreshInView({ force: true });
+    }
+    fitNext = false;
     if (!S.at) {
       current = null; setView('list');
-      setStatus('Search for a town or ZIP, or use your location. The search runs in your browser; nothing is sent to us.');
+      setStatus(browsing() ? 'Curvy roads across the lower 48 for now. Search for a town, ZIP or road, use your location, or zoom the map in on an area. The search runs in your browser; nothing is sent to us.'
+        : 'Curvy roads across the lower 48 for now. Search for a town, ZIP or road, or use your location. The search runs in your browser; nothing is sent to us.');
       mapView.draw({ roads: [], fit: 'us' });
       return;
     }
-    if (S.place && $('#g-q') !== document.activeElement) $('#g-q').value = S.place === 'your location' ? '' : S.place;
     setStatus('Finding roads…');
     let found;
     try { found = await nearby(S.at); } catch { setStatus('The road library didn’t load. Check your connection and try again.', true); return; }
@@ -282,7 +320,63 @@
     const d = shapePath(line);
     return `<svg class="g-shape" viewBox="0 0 56 56" aria-hidden="true"><path class="glow" d="${d}"/><path class="road" d="${d}"/></svg>`;
   }
-  function drawList(focus) {
+  /** Apple's map is up (it can be moved; the roads drawn on their own can't). */
+  const browsing = () => mapView.impl === appleMap && appleMap.map;
+  let listRegion = null, fitNext = false, shownKey = '', everShown = false;
+  /** The list and the map's roads become the curvy roads in view (through roads, as the app's default). */
+  async function refreshInView({ force = false } = {}) {
+    if (S.road || !browsing()) return;
+    const mk = window.mapkit, reg = appleMap.map.region;
+    listRegion = new mk.CoordinateRegion(new mk.Coordinate(reg.center.latitude, reg.center.longitude),
+      new mk.CoordinateSpan(reg.span.latitudeDelta, reg.span.longitudeDelta));
+    const c = [reg.center.latitude, reg.center.longitude], h = reg.span.latitudeDelta / 2, w = reg.span.longitudeDelta / 2;
+    if (reg.span.latitudeDelta > BROWSE_SPAN) {
+      if (!S.at || current) {
+        current = null; shownKey = ''; setView('list'); listEl.innerHTML = ''; moreEl.hidden = true;
+        if (everShown) setStatus('Zoom in on the lower 48 to see the roads.');   // the opening line already says so
+        mapView.draw({ roads: [], center: S.at, label: shortPlace(), fit: 'none' });
+      }
+      return;
+    }
+    let lists;
+    try {
+      await loadMeta();
+      const names = [];
+      for (let a = Math.floor(c[0] - h); a <= Math.floor(c[0] + h); a++)
+        for (let b = Math.floor(c[1] - w); b <= Math.floor(c[1] + w); b++) names.push(`${a}_${b}`);
+      if (!names.some(t => meta.tileSet.has(t))) {
+        current = null; shownKey = ''; setView('list'); listEl.innerHTML = ''; moreEl.hidden = true;
+        setStatus('The road library covers the lower 48 for now. Move the map there to see roads.');
+        return mapView.draw({ roads: [], center: S.at, label: shortPlace(), fit: 'none' });
+      }
+      lists = await Promise.all(names.map(loadTile));
+    } catch { return setStatus('The road library didn’t load. Check your connection and try again.', true); }
+    if (S.road) return;
+    const seen = new Set(), found = [];
+    for (const r of lists.flat()) {
+      if (seen.has(r.ref) || r.sweeper || r.deadEnd) continue;
+      seen.add(r.ref);
+      if (!r.box) { const l = pts(r); r.box = [Math.min(...l.map(p => p[0])), Math.min(...l.map(p => p[1])), Math.max(...l.map(p => p[0])), Math.max(...l.map(p => p[1]))]; }
+      if (r.box[2] < c[0] - h || r.box[0] > c[0] + h || r.box[3] < c[1] - w || r.box[1] > c[1] + w) continue;
+      found.push(r);
+    }
+    found.sort((a, b) => b.score - a.score);
+    const kept = found.slice(0, BROWSE_MAX);
+    const key = kept.map(r => r.ref).join() + '|' + S.sort + '|' + (S.at || '');
+    if (!force && key === shownKey) return;
+    shownKey = key;
+    picked = null; showPick(null);
+    current = { list: kept.map(r => ({ road: r, miles: milesTo(S.at || c, pts(r)) })), inView: true };
+    setView('list');
+    const n = found.length;
+    everShown = true;
+    setStatus(!n ? 'No curvy roads in the library here. It covers the lower 48 for now.'
+      : n > kept.length ? `The ${kept.length} best rated of ${n.toLocaleString()} roads in view. Zoom in for the rest.`
+      : `${n} ${n === 1 ? 'road' : 'roads'} in view`);
+    drawList(false, 'none');
+  }
+
+  function drawList(focus, fit = 'roads') {
     const list = sorted(current.list, S.sort), parts = partNames(list);
     const narrow = !matchMedia('(min-width: 900px)').matches;
     listEl.innerHTML = list.map((n, i) => {
@@ -291,12 +385,12 @@
         ${tile(pts(r))}
         <span class="g-row-text"><span class="g-row-name">${esc(nameOf(r, parts))}</span>
           <span class="g-row-sub">${r.miles.toFixed(1)} mi · ${r.cpm.toFixed(1)} curves a mile</span>
-          <span class="g-row-sub">${n.miles.toFixed(1)} mi away in a straight line</span></span>
+          ${S.at ? `<span class="g-row-sub">${n.miles.toFixed(1)} mi away in a straight line</span>` : ''}</span>
         ${ringSmall(r.score)}</a></li>`;
     }).join('');
     moreEl.hidden = !(narrow && list.length > FIRST_ROWS);
     moreEl.textContent = `Show all ${list.length}`;
-    mapView.draw({ roads: list.map(n => ({ road: n.road })), center: S.at, label: shortPlace(), fit: 'roads' });
+    mapView.draw({ roads: list.map(n => ({ road: n.road })), center: S.at, label: shortPlace(), fit });
     if (focus) $('h1', $('.g-head')).focus({ preventScroll: true });
   }
 
@@ -335,8 +429,9 @@
     }
     document.title = `${r.name} · Guide · Palomares`;
     const l = pts(r);
-    $('#g-back').textContent = S.at ? `‹ Roads near ${S.place === 'your location' ? 'you' : shortPlace() || 'here'}` : '‹ Roads nearby';
-    $('#g-back').href = href({ ...S, road: null, at: S.at || l[Math.floor(l.length / 2)], place: S.at ? S.place : '' });
+    $('#g-back').textContent = S.at ? `‹ Roads near ${S.place === 'your location' ? 'you' : shortPlace() || 'here'}`
+      : listRegion ? '‹ Roads on the map' : '‹ Roads nearby';
+    $('#g-back').href = href({ ...S, road: null, at: S.at || (listRegion ? null : l[Math.floor(l.length / 2)]), place: S.at ? S.place : '' });
     $('#g-road-name').textContent = r.name;
     // a riders' name leads, the map's under it (written by the build, as the app's RoadWords.mapNameLine)
     $('#g-road-map').hidden = !r.mapLine;
@@ -500,6 +595,9 @@
         showsPointsOfInterest: false, colorScheme: isDark() ? mk.Map.ColorSchemes.Dark : mk.Map.ColorSchemes.Light,
       });
       this.map.addEventListener('select', e => { if (e.overlay && e.overlay.data && e.overlay.data.ref) pick(e.overlay.data.ref); });
+      // the list follows the map: pan or zoom anywhere and the roads in view are listed (after a search's fit too)
+      let settle = null;
+      this.map.addEventListener('region-change-end', () => { clearTimeout(settle); settle = setTimeout(() => refreshInView(), 200); });
       // a fit asked for before MapKit finishes authorizing is dropped: fit again once it's ready
       // and keep the map out of sight until then: before it, MapKit shows 0°, 0° (off West Africa)
       container.classList.add('g-waiting');
@@ -584,7 +682,10 @@
       try {
         window.mapkit.addEventListener('error', fail);
         window.mapkit.init({ authorizationCallback: done => done(token), language: 'en' });
-        if (!fellBack) mapView.use(appleMap);
+        if (!fellBack) {
+          mapView.use(appleMap);
+          if (!S.at && !S.road) render();     // the opening line can now offer zooming the map
+        }
       } catch { fail(); }
     };
     const s = document.createElement('script');
@@ -618,6 +719,12 @@
   }
   function choose(o) {
     showOptions([]);
+    fitNext = true;                     // a search moves the map: fit its roads, then the list follows the map
+    if (o.road) {                       // a road: its page, with the town it's near as the place to go back to
+      input.value = o.place;
+      if (o.at) store.set('guide.last', { at: o.at, place: o.place });
+      return go({ at: o.at, place: o.place, road: o.road });
+    }
     input.value = o.label;
     store.set('guide.last', { at: o.at, place: o.label });
     go({ at: o.at, place: o.label, road: null }, { focus: false });
@@ -644,7 +751,7 @@
     if (active >= 0 && options[active]) return choose(options[active]);
     const list = await suggest(text).catch(() => []);
     if (list.length) choose(list[0]);
-    else { showOptions([]); setStatus(`No town or ZIP in the lower 48 matches “${text}”.`, true); }
+    else { showOptions([]); setStatus(`No town, ZIP or road in the lower 48 matches “${text}”.`, true); }
   });
 
   $('#g-locate').addEventListener('click', () => {
@@ -657,6 +764,7 @@
       input.value = '';
       // a place, not a fix: kept to about 100 m in the address (and never sent anywhere)
       const at = [pos.coords.latitude, pos.coords.longitude];
+      fitNext = true;
       go({ at, place: 'your location', road: null }, { focus: false });
     }, () => {
       b.removeAttribute('aria-busy');

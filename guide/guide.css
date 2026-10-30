@@ -52,8 +52,8 @@ section.grouped .g-field, .g-body .g-field { background: var(--card); }
   background: var(--row); border: 1px solid var(--divider); border-radius: 14px; box-shadow: var(--g-shadow);
   max-height: 320px; overflow: auto;
 }
-.g-suggest li { padding: 0 12px; min-height: 44px; display: flex; align-items: center; border-radius: 10px; cursor: pointer; }
-.g-suggest li .muted { margin-left: 6px; font-size: 15px; }
+.g-suggest li { padding: 6px 12px; min-height: 44px; display: flex; flex-wrap: wrap; align-items: baseline; align-content: center; column-gap: 6px; border-radius: 10px; cursor: pointer; }
+.g-suggest li .muted { font-size: 14px; }
 .g-suggest li[aria-selected="true"], .g-suggest li:hover { background: var(--g-tint); }
 
 /* Sort chips */
@@ -218,7 +218,7 @@ section.grouped .g-field, .g-body .g-field { background: var(--card); }
     grid-column: 2; grid-row: 1 / -1; margin: 24px 0; z-index: 4; border-radius: 22px;
     background: var(--g-panel); box-shadow: var(--g-shadow);
   }
-  .g-head { grid-column: 2; grid-row: 1; z-index: 5; margin-top: 24px; padding: 20px 20px 12px; }
+  .g-head { grid-column: 2; grid-row: 1; z-index: 6; margin-top: 24px; padding: 20px 20px 12px; }
   .g-body { grid-column: 2; grid-row: 2; z-index: 5; margin-bottom: 24px; overflow: auto; overscroll-behavior: contain; padding-bottom: 16px; border-radius: 0 0 22px 22px; }
   .g-chips { padding: 0 20px 8px; }
   .g-list { padding: 0 12px; }
