@@ -92,6 +92,11 @@ section.grouped .g-field, .g-body .g-field { background: var(--card); }
 .g-ring-sm { flex: none; width: 42px; height: 42px; }
 .g-ring-sm circle { fill: none; stroke-width: 4; stroke-linecap: round; }
 .g-ring-sm .track { stroke: var(--g-track); }
+.g-ring-sm .track.sweep { stroke-dasharray: 3 3; stroke-linecap: butt; }
+.g-tag { font-size: 12px; font-weight: 600; color: var(--link); border: 1px solid currentColor; border-radius: 10px; padding: 0 7px; margin-left: 6px; vertical-align: 2px; }
+.g-further { list-style: none; padding: 14px 4px 4px; }
+.g-further h2 { margin: 0; font-size: 20px; }
+.g-further p { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
 .g-ring-sm .value { stroke: var(--g-ring, var(--link)); }
 .g-ring-sm text { fill: var(--text); font: 700 14px ui-rounded, -apple-system, BlinkMacSystemFont, sans-serif; }
 .g-more {

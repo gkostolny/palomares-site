@@ -4,7 +4,10 @@
 (() => {
   'use strict';
 
-  const RADIUS = 20, WIDER = 50, FIRST_ROWS = 8;
+  const FIRST_ROWS = 8;
+  // the app's sparse-country rule (RideKit RoadFinder.guideList, approved 2026-10-30): reaches in miles, the count that's
+  // enough, sweepers below this many curvy roads, and nothing within the last reach is outside the library
+  const REACHES = [20, 50, 100], ENOUGH = 5, CURVY_PLENTY = 8, FURTHEST = 310;
   // browsing Apple's map: roads show once the view is at most this many degrees of latitude tall (about 70 miles),
   // and at most this many of the best rated are drawn and listed
   const BROWSE_SPAN = 1.0, BROWSE_MAX = 250;
@@ -143,21 +146,36 @@
       for (let b = Math.floor(p[1] - dLon); b <= Math.floor(p[1] + dLon); b++) out.push(`${a}_${b}`);
     return out;
   }
-  /** The roads within 20 miles (50 when fewer than three are that close): through roads only, as the app's default
-      (no dead ends, no sweepers: those are the app's own filters). */
+  /** RideKit RoadFinder.guideList (the sparse-country rule): the roads within 20 miles, widened to 50 then 100 until there
+      are 5; sweepers too where curvy roads in reach are under 8; under 5 at 100 miles, the nearest others up to 5 in all
+      (`further`), within 310 miles. No dead ends, as the app's default. */
   async function nearby(p) {
     await loadMeta();
-    for (const radius of [RADIUS, WIDER]) {
-      const lists = await Promise.all(tilesAround(p, radius).map(loadTile));
+    const within = async miles => {
+      const lists = await Promise.all(tilesAround(p, miles).map(loadTile));
       const seen = new Set(), out = [];
       for (const r of lists.flat()) {
-        if (seen.has(r.ref) || r.sweeper || r.deadEnd) continue;
+        if (seen.has(r.ref) || r.deadEnd) continue;
         seen.add(r.ref);
         const m = milesTo(p, pts(r));
-        if (m <= radius) out.push({ road: r, miles: m });
+        if (m <= miles) out.push({ road: r, miles: m });
       }
-      if (out.length >= 3 || radius === WIDER) return { radius, list: out };
+      return out;
+    };
+    let radius = REACHES[0], list = [], sweepers = false;
+    for (radius of REACHES) {
+      const all = await within(radius), curvy = all.filter(n => !n.road.sweeper);
+      sweepers = curvy.length < CURVY_PLENTY && all.length > curvy.length;
+      list = curvy.length < CURVY_PLENTY ? all : curvy;
+      if (list.length >= ENOUGH) break;
     }
+    let further = [];
+    if (list.length < ENOUGH) {
+      const shown = new Set(list.map(n => n.road.ref));
+      further = (await within(FURTHEST)).filter(n => !shown.has(n.road.ref) && n.miles > radius)
+        .sort((a, b) => a.miles - b.miles).slice(0, ENOUGH - list.length);
+    }
+    return { radius, list, further, widened: radius > REACHES[0], sweepers };
   }
   const SORTS = {
     rating: n => n.road.score,
@@ -325,16 +343,18 @@
     setView('list');
     const n = found.list.length;
     const where = S.place === 'your location' ? 'of you' : S.place ? `of ${shortPlace()}` : '';
-    if (!n) setStatus(`No curvy paved roads in the library within ${WIDER} miles${where ? ' ' + where : ''}. The library covers the lower 48 and southern Canada for now.`);
-    else setStatus(`${n} ${n === 1 ? 'road' : 'roads'} within ${found.radius} miles${where ? ' ' + where : ''}`);
+    if (!n && !found.further.length) setStatus(`No curvy paved roads in the library within ${FURTHEST} miles${where ? ' ' + where : ''}. The library covers the lower 48 and southern Canada for now.`);
+    else setStatus(`${n} ${n === 1 ? 'road' : 'roads'} within ${found.radius} miles${where ? ' ' + where : ''}`
+      + (found.widened ? '. Few curvy roads close by, so this looks further.' : '')
+      + (found.sweepers ? ' Few curvy roads here, so sweepers are in the list too, each rated against other sweepers.' : ''));
     drawList(focus);
   }
 
-  function ringSmall(score) {
+  function ringSmall(score, sweeper = false) {
     const r = 17, c = 2 * Math.PI * r;
-    return `<svg class="g-ring-sm" width="42" height="42" viewBox="0 0 42 42" aria-hidden="true"><circle class="track" cx="21" cy="21" r="${r}"/>
+    return `<svg class="g-ring-sm" width="42" height="42" viewBox="0 0 42 42" aria-hidden="true"><circle class="track${sweeper ? ' sweep' : ''}" cx="21" cy="21" r="${r}"/>
       <circle class="value" cx="21" cy="21" r="${r}" stroke-dasharray="${(c * score / 100).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 21 21)"/>
-      <text x="21" y="26" text-anchor="middle">${score}</text></svg><span class="visually-hidden">Rating ${score} of 100</span>`;
+      <text x="21" y="26" text-anchor="middle">${score}</text></svg><span class="visually-hidden">Rating ${score} of 100${sweeper ? ', among sweepers' : ''}</span>`;
   }
   /** A road's shape as a little night road: a white line with the glow of the splash's road, on the night sky. */
   function tile(line) {
@@ -362,7 +382,8 @@
       for (let a = Math.floor((c[0] - h) / step) * step; a <= c[0] + h; a += step)
         for (let b = Math.floor((c[1] - w) / step) * step; b <= c[1] + w; b += step) names.push(`${a}_${b}`);
       const have = far ? new Set(meta.overview) : meta.tileSet;
-      if (!names.some(t => have.has(t))) {
+      // zoomed out over nothing: outside the library; close in, an empty view still lists the nearest roads (below)
+      if (far && !names.some(t => have.has(t))) {
         current = null; shownKey = ''; setView('list'); listEl.innerHTML = ''; moreEl.hidden = true;
         setStatus('The road library covers the lower 48 and southern Canada for now. Move the map there to see roads.');
         return mapView.draw({ roads: [], center: S.at, label: shortPlace(), fit: 'none' });
@@ -371,26 +392,41 @@
         : await Promise.all(names.map(loadTile));
     } catch { return setStatus('The road library didn’t load. Check your connection and try again.', true); }
     if (S.road) return;
-    const seen = new Set(), found = [];
+    const seen = new Set(), inView = [];
     for (const r of lists.flat()) {
-      if (seen.has(r.ref) || r.sweeper || r.deadEnd) continue;
+      if (seen.has(r.ref) || r.deadEnd) continue;
       seen.add(r.ref);
       if (!r.box) { const l = pts(r); r.box = [Math.min(...l.map(p => p[0])), Math.min(...l.map(p => p[1])), Math.max(...l.map(p => p[0])), Math.max(...l.map(p => p[1]))]; }
       if (r.box[2] < c[0] - h || r.box[0] > c[0] + h || r.box[3] < c[1] - w || r.box[1] > c[1] + w) continue;
-      found.push(r);
+      inView.push(r);
     }
+    // the sparse-country rule, as the iPad's roads in view: sweepers join where curvy roads are few, and an empty view
+    // lists the nearest five beside the map (the overview has no sweepers)
+    const curvyInView = inView.filter(r => !r.sweeper);
+    const found = curvyInView.length < CURVY_PLENTY && !far ? inView : curvyInView;
     found.sort((a, b) => b.score - a.score);
+    let further = [];
+    // a searched place always gets its nearest roads, however far out the map had to zoom to show them
+    if (!found.length && (S.at || !far)) {
+      try {
+        const near = await nearby(S.at || c);
+        further = [...near.list, ...near.further].sort((a, b) => a.miles - b.miles).slice(0, ENOUGH)
+          .map(x => ({ road: x.road, miles: milesTo(S.at || c, pts(x.road)) }));
+      } catch (e) { console.warn("guide: nearest roads failed", e); further = []; }
+      if (S.road) return;
+    }
     const kept = found.slice(0, BROWSE_MAX);
-    const key = kept.map(r => r.ref).join() + '|' + S.sort + '|' + (S.at || '');
+    const key = kept.map(r => r.ref).join() + '|' + further.map(x => x.road.ref).join() + '|' + S.sort + '|' + (S.at || '');
     if (!force && key === shownKey) return;
     shownKey = key;
     picked = null; showPick(null);
-    current = { list: kept.map(r => ({ road: r, miles: milesTo(S.at || c, pts(r)) })), inView: true };
+    current = { list: kept.map(r => ({ road: r, miles: milesTo(S.at || c, pts(r)) })), further, inView: true };
     setView('list');
     const n = found.length;
     if (!everShown && !S.at && country) return drawList(false, 'none');   // the opening line stays on the first look
     everShown = true;
-    setStatus(!n ? 'No curvy paved roads in the library here. It covers the lower 48 and southern Canada for now.'
+    setStatus(!n && !further.length ? 'No curvy paved roads in the library here. It covers the lower 48 and southern Canada for now.'
+      : !n ? '0 roads in view'
       : country ? `The ${kept.length} best rated roads in view. Zoom in for more.`
       : n > kept.length ? `The ${kept.length} best rated of ${n.toLocaleString()} roads in view. Zoom in for the rest.`
       : `${n} ${n === 1 ? 'road' : 'roads'} in view`);
@@ -400,22 +436,27 @@
   function drawList(focus, fit = 'roads') {
     // Best for a loop lists only roads with a loop, each with its best one (Gabe, 2026-10-29)
     const forLoops = S.sort === 'loops';
-    const list = sorted(forLoops ? current.list.filter(n => n.road.bestLoop) : current.list, S.sort), parts = partNames(list);
+    const list = sorted(forLoops ? current.list.filter(n => n.road.bestLoop) : current.list, S.sort);
+    const further = forLoops ? [] : (current.further || []), parts = partNames([...list, ...further]);
+    const home = list.length ? list[0].road.state : null;
     if (forLoops) setStatus(list.length ? `${list.length} ${list.length === 1 ? 'road' : 'roads'} in view with a loop` : 'No loops through the roads here. Move the map or zoom out.');
     const narrow = !matchMedia('(min-width: 900px)').matches;
-    listEl.innerHTML = list.map((n, i) => {
-      const r = n.road;
+    const row = (n, i, away) => {
+      const r = n.road, place = away && r.state !== home ? `${STATES[r.state] || r.state} · ` : '';
       return `<li${narrow && i >= FIRST_ROWS ? ' hidden' : ''}><a class="g-row" data-ref="${esc(r.ref)}" href="${esc(href({ ...S, road: r.ref }))}">
         ${tile(pts(r))}
-        <span class="g-row-text"><span class="g-row-name">${esc(nameOf(r, parts))}</span>
+        <span class="g-row-text"><span class="g-row-name">${esc(nameOf(r, parts))}${r.sweeper ? ' <span class="g-tag">Sweeper</span>' : ''}</span>
           ${forLoops ? `<span class="g-row-sub">${esc(r.bestLoop)}</span>` : ''}
-          <span class="g-row-sub">${r.miles.toFixed(1)} mi · ${r.cpm.toFixed(1)} curves a mile</span>
-          ${S.at && n.miles < 100 ? `<span class="g-row-sub">${n.miles.toFixed(1)} mi away in a straight line</span>` : ''}</span>
-        ${ringSmall(r.score)}</a></li>`;
-    }).join('');
+          <span class="g-row-sub">${r.miles.toFixed(1)} mi · ${r.cpm.toFixed(1)} ${r.sweeper ? 'bends' : 'curves'} a mile</span>
+          ${S.at ? `<span class="g-row-sub">${place}${n.miles.toFixed(1)} mi away in a straight line</span>` : ''}</span>
+        ${ringSmall(r.score, r.sweeper)}</a></li>`;
+    };
+    listEl.innerHTML = list.map((n, i) => row(n, i, false)).join('')
+      + (further.length ? `<li class="g-further"><h2>Further away</h2><p>The nearest others, for a longer day out.</p></li>`
+        + further.map(n => row(n, 0, true)).join('') : '');
     moreEl.hidden = !(narrow && list.length > FIRST_ROWS);
     moreEl.textContent = `Show all ${list.length}`;
-    mapView.draw({ roads: list.map(n => ({ road: n.road })), center: S.at, label: shortPlace(), fit });
+    mapView.draw({ roads: [...list, ...further].map(n => ({ road: n.road })), center: S.at, label: shortPlace(), fit });
     if (focus) $('h1', $('.g-head')).focus({ preventScroll: true });
   }
 
