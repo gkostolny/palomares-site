@@ -33,12 +33,12 @@
 
         <section class="card" id="files">
           <h2 class="eyebrow">The files</h2>
-          <p><strong><a href="index-usa.json" download>index-usa.json</a></strong> · 27.5 MB · JSON<br>
-            The road index for the lower 48 states: 21,073 stretches of curvy road and long sweepers, each with its state, its simplified centerline (an encoded polyline), name (and the name riders use, for a few famous roads), route numbers and speed limit, and the measures the Guide uses: corners, curvature, climb and descent, trees and water beside the road, buildings and stops along it, surface, July temperatures, the roads it links up with and loops through it, and its rating (among all the roads in the file). Paved roads only: a stretch is left out when a quarter or more of its length is unpaved in OpenStreetMap or the Forest Service and BLM road data. Many country roads have no surface on record; those stay in, so a road can still turn to gravel where the maps are wrong.</p>
+          <p><strong><a href="index-us-canada.json" download>index-us-canada.json</a></strong> · 28.4 MB · JSON<br>
+            The road index for the lower 48 states and southern Canada: 22,080 stretches of curvy road and long sweepers (21,073 in the US, 1,007 in Canada), each with its state or province, its simplified centerline (an encoded polyline), name (and the name riders use, for a few famous roads), route numbers and speed limit, and the measures the Guide uses: corners, curvature, climb and descent, trees and water beside the road, buildings and stops along it, surface, July temperatures (US only), the roads it links up with and loops through it, and its rating (among all the roads in the file, on both sides of the border). Paved roads only: a stretch is left out when a quarter or more of its length is unpaved in OpenStreetMap, the Forest Service and BLM road data, Canada’s National Road Network or Nova Scotia’s topographic roads, or when we judged it unpaved on aerial photos. Many country roads have no surface on record; those stay in, so a road can still turn to gravel where the maps are wrong.</p>
           <p><strong><a href="track-outlines.json" download>track-outlines.json</a></strong> · 0.2 MB · JSON<br>
             The outlines, road edges, position and direction of the 12 circuits on the famous-corner cards, in meters on a local grid centered on each circuit. The cards’ words aren’t included; they’re ours.</p>
           <p><strong><a href="../guide/data/meta.json">The Guide’s files</a></strong> · guide/data/ · JSON<br>
-            The same road index as the <a href="../guide/">Guide</a> on this site reads it: split into 1° tiles of latitude and longitude (<code>tiles/</code>, listed in <code>meta.json</code>), with each road’s card sentences, numbers and rating parts, and each loop’s connecting roads (<code>joins/</code>). The town and ZIP lists for its search (<code>places/</code>, <code>zips/</code>) are public domain.</p>
+            The same road index as the <a href="../guide/">Guide</a> on this site reads it: split into 1° tiles of latitude and longitude (<code>tiles/</code>, listed in <code>meta.json</code>), with each road’s card sentences, numbers and rating parts, and each loop’s connecting roads (<code>joins/</code>). The town, ZIP and postcode lists for its search (<code>places/</code>, <code>zips/</code>, <code>postcodes/</code>) come from the sources below.</p>
         </section>
 
         <section class="card" id="license">
@@ -50,13 +50,14 @@
           <h2 class="eyebrow">Sources</h2>
           <ul>
             <li>Road outlines, names, route numbers and speed limits: © OpenStreetMap contributors, via Overture Maps Foundation (ODbL).</li>
-            <li>Elevation: USGS 3D Elevation Program (public domain).</li>
+            <li>Elevation: USGS 3D Elevation Program (public domain); in Canada, Natural Resources Canada’s MRDEM-30, under the <a href="https://open.canada.ca/en/open-government-licence-canada">Open Government Licence – Canada</a>.</li>
             <li>Trees, water and built-up land: © ESA WorldCover project 2021 / Contains modified Copernicus Sentinel data (2021), <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>; we measured shares beside each road from it.</li>
             <li>Surface on national forest and BLM roads: U.S. Forest Service and Bureau of Land Management (public domain).</li>
+            <li>Surface in Canada: the National Road Network, under the Open Government Licence – Canada; Nova Scotia Topographic DataBase, under the <a href="https://novascotia.ca/opendata/licence.asp">Open Government Licence – Nova Scotia</a>; and, for some roads, our own look at aerial photos from Quebec (CC BY 4.0), Ontario (Open Government Licence – Ontario) and New Brunswick (GeoNB).</li>
             <li>July temperatures: NOAA 1991–2020 U.S. Climate Normals (public domain).</li>
             <li>Buildings and places beside a road: Overture Maps Foundation, from OpenStreetMap, Microsoft and Google data; counted only.</li>
             <li>Circuit outlines: © OpenStreetMap contributors (ODbL).</li>
-            <li>Towns and ZIP codes for the Guide’s search: U.S. Census Bureau, <a href="https://www.census.gov/geographies/reference-files/time-series/geo/gazetteer-files.html">2024 Gazetteer Files</a> (public domain); places and ZIP Code Tabulation Areas, lower 48.</li>
+            <li>Towns and ZIP codes for the Guide’s search: U.S. Census Bureau, <a href="https://www.census.gov/geographies/reference-files/time-series/geo/gazetteer-files.html">2024 Gazetteer Files</a> (public domain); places and ZIP Code Tabulation Areas, lower 48. Canada’s towns: the Canadian Geographical Names Database, Natural Resources Canada, under the Open Government Licence – Canada. Canada’s postcode areas: <a href="https://www.geonames.org/">GeoNames</a>, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.</li>
           </ul>
         </section>
 

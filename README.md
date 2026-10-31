@@ -21,11 +21,13 @@ scripts are the Guide's own and Apple's MapKit JS, on `guide/` alone.
   home tile and a hash of the app's road id, so links survive a rebuild that keeps the
   road). Searching runs in the browser; nothing is sent to us.
   - `guide/data/` is generated, never edited: RideLogger's `tools/_run web_guide.py
-    --gazetteer <dir>` splits `RideLogger/Roads/index-usa.json` into 1° tiles (each road
+    --gazetteer <dir> --cgn <file> --fsa <file>` splits the app's road index (`index-us-canada.json` since
+    2026-10-30) into 1° tiles (each road
     in every tile its line touches), writes each road's card sentences
     (`road_words.index_sentences`, the app's words), numbers, rating parts and note, and
     loop lines into them, puts loops' connecting roads in `joins/`, and town and ZIP
-    centers from the Census 2024 Gazetteer in `places/` and `zips/`. Rerun it whenever
+    centers from the Census 2024 Gazetteer in `places/` and `zips/`, Canada's towns (Geographical Names Database) in
+    `places/` and its postcode areas (GeoNames) in `postcodes/`. Rerun it whenever
     the road index or the words change (with `tools/open-data sync`).
   - Caching: GitHub Pages lets browsers reuse files for 10 minutes, so `index.html` loads `guide.js` and `guide.css`
     with `?v=<date><letter>`: bump it with every change to either. `data/meta.json` is always revalidated.
@@ -35,8 +37,9 @@ scripts are the Guide's own and Apple's MapKit JS, on `guide/` alone.
     doesn't load, the Guide draws the roads on their own and says so. For local checks,
     a short-lived unrestricted token goes in the browser's storage only:
     `localStorage.setItem('palomares.mapkitDevToken', '<token>')` on localhost. Never commit it.
-- `data/`: the open-data page and the two ODbL files the app ships: `index-usa.json`
-  (a copy of RideLogger's `RideLogger/Roads/index-usa.json`, the lower 48 since 2026-10-28) and `track-outlines.json`
+- `data/`: the open-data page and the two ODbL files the app ships: `index-us-canada.json`
+  (a copy of RideLogger's `RideLogger/Roads/index-us-canada.json`: the lower 48 since 2026-10-28, southern Canada added
+  2026-10-30, replacing `index-usa.json`) and `track-outlines.json`
   (only the OpenStreetMap-derived fields of RideLogger's `TrackCards.json`). Refresh both whenever
   an app release changes them.
 - `style.css`: neutral surfaces, teal controls, system fonts and the night road,

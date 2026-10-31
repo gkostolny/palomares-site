@@ -17,7 +17,10 @@
     NH: 'New Hampshire', NJ: 'New Jersey', NM: 'New Mexico', NY: 'New York', NC: 'North Carolina', ND: 'North Dakota',
     OH: 'Ohio', OK: 'Oklahoma', OR: 'Oregon', PA: 'Pennsylvania', RI: 'Rhode Island', SC: 'South Carolina',
     SD: 'South Dakota', TN: 'Tennessee', TX: 'Texas', UT: 'Utah', VT: 'Vermont', VA: 'Virginia', WA: 'Washington',
-    WV: 'West Virginia', WI: 'Wisconsin', WY: 'Wyoming' };
+    WV: 'West Virginia', WI: 'Wisconsin', WY: 'Wyoming',
+    // Canada's provinces (2026-10-30): no code is shared with a state
+    AB: 'Alberta', BC: 'British Columbia', MB: 'Manitoba', NB: 'New Brunswick', NL: 'Newfoundland and Labrador',
+    NS: 'Nova Scotia', ON: 'Ontario', PE: 'Prince Edward Island', QC: 'Quebec', SK: 'Saskatchewan' };
 
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -185,7 +188,8 @@
   }
   const nameOf = (r, parts) => parts && parts.has(r.ref) ? `${r.name} · ${parts.get(r.ref)}` : r.name;
 
-  // Places: towns by first letter, ZIPs by first digit (Census Gazetteer)
+  // Places: towns by first letter, ZIPs by first digit (Census Gazetteer); Canada's towns among them (Geographical Names
+  // Database) and its postcode areas, the first three characters ("V0N"), by first letter (Statistics Canada)
   const placeCache = new Map();
   function loadPlaces(file) {
     if (!placeCache.has(file)) placeCache.set(file, getJSON(file).catch(e => { placeCache.delete(file); throw e; }));
@@ -194,6 +198,11 @@
   async function suggest(text) {
     const q = fold(text);
     if (!q) return [];
+    if (/^[a-z]\d[a-z]?$/.test(q.replace(/\s+/g, '')) || /^[a-z]\d[a-z]\s*\d/.test(q)) {
+      const fsas = await loadPlaces(`data/postcodes/${q[0]}.json`), k = q.replace(/\s+/g, '').slice(0, 3).toUpperCase();
+      return Object.keys(fsas).filter(z => z.startsWith(k)).slice(0, 8)
+        .map(z => ({ label: z, detail: 'postcode', at: fsas[z] }));
+    }
     if (/^\d{3,5}$/.test(q)) {
       const zips = await loadPlaces(`data/zips/${q[0]}.json`);
       return Object.keys(zips).filter(z => z.startsWith(q)).slice(0, 8)
@@ -304,8 +313,8 @@
     fitNext = false;
     if (!S.at) {
       current = null; setView('list');
-      setStatus(browsing() ? 'Curvy paved roads across the lower 48 for now. Search for a town, ZIP or road, use your location, or zoom the map in on an area. The search runs in your browser; nothing is sent to us.'
-        : 'Curvy paved roads across the lower 48 for now. Search for a town, ZIP or road, or use your location. The search runs in your browser; nothing is sent to us.');
+      setStatus(browsing() ? 'Curvy paved roads across the lower 48 and southern Canada for now. Search for a town, ZIP, postcode or road, use your location, or zoom the map in on an area. The search runs in your browser; nothing is sent to us.'
+        : 'Curvy paved roads across the lower 48 and southern Canada for now. Search for a town, ZIP, postcode or road, or use your location. The search runs in your browser; nothing is sent to us.');
       mapView.draw({ roads: [], fit: 'us' });
       return;
     }
@@ -316,7 +325,7 @@
     setView('list');
     const n = found.list.length;
     const where = S.place === 'your location' ? 'of you' : S.place ? `of ${shortPlace()}` : '';
-    if (!n) setStatus(`No curvy paved roads in the library within ${WIDER} miles${where ? ' ' + where : ''}. The library covers the lower 48 for now.`);
+    if (!n) setStatus(`No curvy paved roads in the library within ${WIDER} miles${where ? ' ' + where : ''}. The library covers the lower 48 and southern Canada for now.`);
     else setStatus(`${n} ${n === 1 ? 'road' : 'roads'} within ${found.radius} miles${where ? ' ' + where : ''}`);
     drawList(focus);
   }
@@ -355,7 +364,7 @@
       const have = far ? new Set(meta.overview) : meta.tileSet;
       if (!names.some(t => have.has(t))) {
         current = null; shownKey = ''; setView('list'); listEl.innerHTML = ''; moreEl.hidden = true;
-        setStatus('The road library covers the lower 48 for now. Move the map there to see roads.');
+        setStatus('The road library covers the lower 48 and southern Canada for now. Move the map there to see roads.');
         return mapView.draw({ roads: [], center: S.at, label: shortPlace(), fit: 'none' });
       }
       lists = far ? await Promise.all((country ? ['top'] : names.filter(t => have.has(t))).map(loadOverview))
@@ -381,7 +390,7 @@
     const n = found.length;
     if (!everShown && !S.at && country) return drawList(false, 'none');   // the opening line stays on the first look
     everShown = true;
-    setStatus(!n ? 'No curvy paved roads in the library here. It covers the lower 48 for now.'
+    setStatus(!n ? 'No curvy paved roads in the library here. It covers the lower 48 and southern Canada for now.'
       : country ? `The ${kept.length} best rated roads in view. Zoom in for more.`
       : n > kept.length ? `The ${kept.length} best rated of ${n.toLocaleString()} roads in view. Zoom in for the rest.`
       : `${n} ${n === 1 ? 'road' : 'roads'} in view`);
@@ -491,7 +500,7 @@
         <p>Record the ride on your iPhone. Afterward, replay every corner of ${esc(r.name)} and see your lean along it.</p>
         <a class="g-button" href="../beta/">About the beta</a></section>
       <p class="g-credit">Something wrong with this road? <a href="${esc(reportLink(r))}">Tell us</a>.</p>
-      <p class="g-credit">Road data © OpenStreetMap contributors, via Overture Maps. Elevation: USGS. <a href="../data/">Open data</a></p>`;
+      <p class="g-credit">Road data © OpenStreetMap contributors, via Overture Maps. Elevation: ${r.country === 'CA' ? 'Natural Resources Canada' : 'USGS'}. <a href="../data/">Open data</a></p>`;
     mapView.draw({ roads: [{ road: r, selected: true }], center: S.at, label: shortPlace(), fit: 'roads', fitCenter: false });
     if (focus) $('#g-road-name').focus({ preventScroll: false });
   }
@@ -791,14 +800,14 @@
     if (active >= 0 && options[active]) return choose(options[active]);
     const list = await suggest(text).catch(() => []);
     if (list.length) choose(list[0]);
-    else { showOptions([]); setStatus(`No town, ZIP or road in the lower 48 matches “${text}”.`, true); }
+    else { showOptions([]); setStatus(`No town, ZIP, postcode or road in the lower 48 or southern Canada matches “${text}”.`, true); }
   });
 
   /** The rider's location (the browser asks first), then roads around it. Always ends in roads or a message: a watchdog
       covers a browser that never answers (an unanswered prompt left the iPad's button doing nothing, 2026-10-29). */
   function locate() {
     const b = $('#g-locate');
-    if (!navigator.geolocation) return setStatus('This browser can’t share a location. Search for a town, ZIP or road instead.', true);
+    if (!navigator.geolocation) return setStatus('This browser can’t share a location. Search for a town, ZIP, postcode or road instead.', true);
     if (b.getAttribute('aria-busy') === 'true') return;
     b.setAttribute('aria-busy', 'true');
     setStatus('Finding your location…');
@@ -807,8 +816,8 @@
       if (done) return;
       done = true;
       b.removeAttribute('aria-busy');
-      setStatus(denied ? 'Location is off for this site. Allow it in your browser’s settings, or search for a town, ZIP or road.'
-        : 'Your location couldn’t be found. Search for a town, ZIP or road instead.', true);
+      setStatus(denied ? 'Location is off for this site. Allow it in your browser’s settings, or search for a town, ZIP, postcode or road.'
+        : 'Your location couldn’t be found. Search for a town, ZIP, postcode or road instead.', true);
     };
     const watchdog = setTimeout(() => fail(false), 20000);
     navigator.geolocation.getCurrentPosition(pos => {
