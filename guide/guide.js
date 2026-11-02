@@ -692,6 +692,12 @@
         this.ready = true;
         if (this.scene) this.draw(this.scene);
         setTimeout(() => refreshInView(), 400);   // a region set from code may not report its change
+        // a shared road's link opened cold once left the map on 0°, 0° though the road was drawn (2026-11-01): if it's
+        // still there, fit again
+        setTimeout(() => {
+          const c = this.map.center;
+          if (this.scene && Math.abs(c.latitude) < 0.01 && Math.abs(c.longitude) < 0.01) this.draw(this.scene);
+        }, 800);
         setTimeout(() => container.classList.remove('g-waiting'), 50);
       });
       setTimeout(() => container.classList.remove('g-waiting'), 4000);   // never hidden for long
@@ -739,7 +745,13 @@
       if (scene.fit === 'us' || (!items.length && scene.fit !== 'none')) {
         map.region = new mk.CoordinateRegion(new mk.Coordinate(38.5, -96.5), new mk.CoordinateSpan(26, 62));
       } else if (scene.fit !== 'none') {
-        if (!map.element.clientWidth) return;
+        // not laid out yet: fit once it is, for a second at most (a fit then was dropped and never made; a hidden map
+        // stays unlaid)
+        if (!map.element.clientWidth) {
+          const tries = (scene.tries || 0) + 1;
+          if (tries <= 60) requestAnimationFrame(() => { if (this.scene === scene) this.draw({ ...scene, tries }); });
+          return;
+        }
         map.showItems(scene.fitCenter === false ? items : [...items, ...map.annotations], { animate: !matchMedia('(prefers-reduced-motion: reduce)').matches, padding: pad });
       }
     },
