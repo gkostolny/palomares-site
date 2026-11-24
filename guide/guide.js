@@ -129,8 +129,9 @@
   const overviewCache = new Map();
   function loadOverview(name) {
     if (!overviewCache.has(name)) {
-      overviewCache.set(name, getJSON(`data/overview/${name}.json`).then(rows => rows.map(([ref, name, score, miles, cpm, corners, loopCount, loopRank, line, bestLoop]) =>
-        ({ ref, name, score, miles, cpm, corners, loopCount, loopRank, line, bestLoop, overview: true })))
+      overviewCache.set(name, getJSON(`data/overview/${name}.json`).then(rows => rows.map(([ref, name, score, miles, cpm, corners, loopCount, loopRank, line, bestLoop, winter]) =>
+        ({ ref, name, score, miles, cpm, corners, loopCount, loopRank, line, bestLoop, overview: true,
+          ...(winter ? { winter: { tag: winter[0], span: winter[1] } } : {}) })))
         .catch(e => { overviewCache.delete(name); throw e; }));
     }
     return overviewCache.get(name);
@@ -350,6 +351,15 @@
     drawList(focus);
   }
 
+  /** A road's usual winter closure, only in its closed months (the app's RoadWords.winterTag): "Usually closed Nov–May".
+      A span with no days runs from the first of its first month to the end of its last. Roads with no fact get nothing. */
+  function winterTag(r, now = new Date()) {
+    const w = r.winter;
+    if (!w) return '';
+    const [fm, fd, tm, td] = w.span, at = (now.getMonth() + 1) * 100 + now.getDate();
+    const from = fm * 100 + (fd || 1), to = tm * 100 + (td || 31);
+    return (from <= to ? at >= from && at <= to : at >= from || at <= to) ? w.tag : '';
+  }
   function ringSmall(score, sweeper = false) {
     const r = 17, c = 2 * Math.PI * r;
     return `<svg class="g-ring-sm" width="42" height="42" viewBox="0 0 42 42" aria-hidden="true"><circle class="track${sweeper ? ' sweep' : ''}" cx="21" cy="21" r="${r}"/>
@@ -447,6 +457,7 @@
         ${tile(pts(r))}
         <span class="g-row-text"><span class="g-row-name">${esc(nameOf(r, parts))}${r.sweeper ? ' <span class="g-tag">Sweeper</span>' : ''}</span>
           ${forLoops ? `<span class="g-row-sub">${esc(r.bestLoop)}</span>` : ''}
+          ${winterTag(r) ? `<span class="g-row-sub g-row-winter">${esc(winterTag(r))}</span>` : ''}
           <span class="g-row-sub">${r.miles.toFixed(1)} mi · ${r.cpm.toFixed(1)} ${r.sweeper ? 'bends' : 'curves'} a mile</span>
           ${S.at ? `<span class="g-row-sub">${place}${n.miles.toFixed(1)} mi away in a straight line</span>` : ''}</span>
         ${ringSmall(r.score, r.sweeper)}</a></li>`;
@@ -522,7 +533,10 @@
     ring.setAttribute('aria-label', `Rating ${r.score} of 100`);
     ring.innerHTML = ringBig(r.score);
     const links = mapsLinks(r);
-    body.innerHTML = `
+    // usually closed in winter: typical months and the agency's own page; nothing at all for a road with no fact
+    const winter = r.winter && r.winter.line ? `<section class="g-card g-winter" aria-label="Winter closure"><p>${esc(r.winter.line)}</p>
+        ${r.winter.link ? `<a href="${esc(r.winter.link[1])}" target="_blank" rel="noopener">${esc(r.winter.link[0])}</a>` : ''}</section>` : '';
+    body.innerHTML = `${winter}
       <dl class="g-card g-stats" aria-label="The numbers">${r.stats.map(([v, k]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>
       <section class="g-card g-words" aria-labelledby="g-h-road"><h2 id="g-h-road">The road</h2>${r.words.map(t => `<p>${esc(t)}</p>`).join('')}</section>
       <details class="g-card g-rates"><summary>How it rates</summary><div class="inner">

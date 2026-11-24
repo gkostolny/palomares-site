@@ -292,3 +292,8 @@ section.grouped .g-field, .g-body .g-field { background: var(--card); }
   .g-suggest { background: #0F3438; border-color: rgba(255,255,255,.14); }
 }
 .g-title .sub .mapped { display: block; margin-top: 4px; }   /* mapped, not ridden (Gabe, 2026-10-29) */
+/* usually closed in winter (2026-11-24): a plain fact on the card, a quiet line in the list during the closed months */
+.g-winter p { margin: 0; font-weight: 600; }
+.g-winter p::before { content: "❄︎ "; }
+.g-winter a { display: inline-block; margin-top: 4px; padding: 10px 0; color: var(--link); }
+.g-row-sub.g-row-winter { font-weight: 600; }
